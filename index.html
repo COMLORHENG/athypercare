@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEINEKEN | Post Go-Live Issue Tracker</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- SheetJS Library for reading Excel files -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Custom Styles & Tailwind Config -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc; /* Light grey background */
+        }
+        /* Simple scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #009a44;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #007a36;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'heineken-green': '#009a44',
+                        'heineken-green-dark': '#007a36',
+                        'heineken-red': '#e21a23',
+                        'priority-medium': '#f59e0b', // Amber 500
+                        'status-testing': '#3b82f6', // Blue 500
+                        'status-closed': '#4b5563',   // Gray 600
+                        'status-fixing': '#f59e0b',    // Re-using priority-medium for Fixing
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-md sticky top-0 z-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Logo and Title -->
+                    <div class="flex items-center space-x-4">
+                        <svg class="h-8 w-auto" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"	 viewBox="0 0 150 36" style="enable-background:new 0 0 150 36;" xml:space="preserve"><style type="text/css">	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#005127;}	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#D8232A;}</style><g>	<path class="st0" d="M150,16.4v0.7c0,0-0.8,0.3-0.8,1.3l0,15.8c0,0.6-0.5,1-1,1h-3.1l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4		h2.5c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C145.4,16.4,150,16.4,150,16.4z M77.2,16.4v17.8c0,0.6-0.5,1-1,1H73		l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4H65c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C73.4,16.4,77.2,16.4,77.2,16.4		z M30.2,16.4h-5.1v7.2h-4.4v-7.2h-5.9v0.7c0,0,0.8,0.3,0.8,1.3v16.8h5.1v-8.1h4.4v8.1h5.1L30.2,16.4L30.2,16.4z M46.7,16.4H35.4		v17.1c0,1,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4		C47.7,16.9,47.2,16.4,46.7,16.4z M57.4,16.4h-5.1v17.8c0,0.6,0.5,1,1,1h4.1V16.4L57.4,16.4z M129.3,16.4H118v17.1		c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4H123v-3.8h7.2v-2.4		C130.3,16.9,129.8,16.4,129.3,16.4z M93.6,16.4H82.3v17.1c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5		c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4C94.6,16.9,94.1,16.4,93.6,16.4L93.6,16.4z M115,16.4h-3.7		c-0.9,0-1.6,0.2-2.3,1l-5.2,5.9v-7h-5.1v17.8c0,0.6,0.5,1,1,1h4.1v-8.5l4.5,7c0.7,1,1.3,1.6,2.9,1.6h4.2l-7.1-11.1L115,16.4		L115,16.4z"/>	<path class="st1" d="M5,23.4c-0.1,0.1-0.3,0.1-0.4-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.4,2.7-8.5,2.7-8.5L0.1,9.3		C-0.1,9.1,0,8.7,0.3,8.7c0.4,0,8.8,0,8.8,0s2.6-8.1,2.7-8.5C11.9,0.1,12,0,12.2,0c0.1,0,0.2,0.1,0.2,0.2c0.1,0.4,2.7,8.5,2.7,8.5		s8.3,0,8.8,0c0.3,0,0.4,0.4,0.2,0.6l-4.2,3.1h-5l-1.5-4.8l-1.5,4.8h-5l4.1,3l-1.5,4.8L5,23.4"/></g></svg>
+                        <span class="text-xl font-semibold text-gray-700 hidden sm:block">Post Go-Live Issue Tracker</span>
+                    </div>
+
+                    <!-- Navigation -->
+                    <nav class="flex items-center space-x-2 sm:space-x-4">
+                        <button id="nav-dashboard" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-white bg-heineken-green">Dashboard</button>
+                        <button id="nav-all-issues" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-gray-600 hover:bg-gray-200 hover:text-gray-900">All Issues</button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h1 class="text-3xl font-bold text-gray-900">Status At a Glance</h1>
+                    <div class="mt-4 sm:mt-0">
+                         <label for="file-upload" class="cursor-pointer inline-flex items-center px-4 py-2 border border-heineken-green text-heineken-green text-sm font-medium rounded-md bg-white hover:bg-green-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Upload Excel
+                         </label>
+                         <input id="file-upload" type="file" class="hidden" accept=".xlsx, .xls, .csv">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Stat Card: Ready To Test -->
+                    <div id="card-ready-to-test" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-heineken-green flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
+                        <h3 class="text-base font-medium text-gray-500 truncate">Ready To Test</h3>
+                        <div class="mt-1 flex-grow">
+                            <p id="card-ready-to-test-count" class="text-5xl font-bold text-heineken-green">0</p>
+                        </div>
+                        <div id="card-ready-to-test-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
+                    </div>
+                    <!-- Stat Card: Testing -->
+                    <div id="card-testing" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-testing flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
+                        <h3 class="text-base font-medium text-gray-500 truncate">Testing</h3>
+                        <div class="mt-1 flex-grow">
+                            <p id="card-testing-count" class="text-5xl font-bold text-status-testing">0</p>
+                        </div>
+                         <div id="card-testing-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
+                    </div>
+                    <!-- Stat Card: Fixing -->
+                    <div id="card-fixing" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-fixing flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
+                        <h3 class="text-base font-medium text-gray-500 truncate">Fixing</h3>
+                        <div class="mt-1 flex-grow">
+                            <p id="card-fixing-count" class="text-5xl font-bold text-status-fixing">0</p>
+                        </div>
+                         <div id="card-fixing-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
+                    </div>
+                    <!-- Stat Card: Closed -->
+                    <div id="card-closed" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-closed flex flex-col">
+                        <h3 class="text-base font-medium text-gray-500 truncate">Closed</h3>
+                        <div class="mt-1 flex-grow">
+                            <p id="card-closed-count" class="text-5xl font-bold text-status-closed">0</p>
+                             <p class="text-sm text-gray-500">Issues</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Issues by System Glance -->
+                <div id="system-glance-view" class="mt-12">
+                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by System</h2>
+                     <div id="system-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                         <!-- System cards will be inserted here -->
+                     </div>
+                </div>
+            </div>
+
+            <!-- All Issues View -->
+            <div id="view-all-issues" class="hidden">
+                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h1 class="text-3xl font-bold text-gray-900">All Issues</h1>
+                     <!-- Filters -->
+                    <div class="flex items-center space-x-2 mt-4 sm:mt-0">
+                         <select id="filter-status" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                             <option value="all">All Statuses</option>
+                             <option value="Ready To Test">Ready To Test</option>
+                             <option value="Testing">Testing</option>
+                             <option value="Fixing">Fixing</option>
+                             <option value="Closed">Closed</option>
+                         </select>
+                         <select id="filter-priority" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                             <option value="all">All Priorities</option>
+                             <option value="High">High</option>
+                             <option value="Medium">Medium</option>
+                             <option value="Low">Low</option>
+                         </select>
+                    </div>
+                 </div>
+                
+                <!-- Issues Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead id="issues-table-head" class="bg-gray-50">
+                            <!-- Dynamic header will be inserted here -->
+                        </thead>
+                        <tbody id="issues-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="text-center py-4 text-sm text-gray-500 mt-8">
+            <p>&copy; 2025 The HEINEKEN Company. All Rights Reserved.</p>
+            <p id="last-updated" class="mt-1"></p>
+        </footer>
+    </div>
+
+    <script>
+        // --- DATA SOURCE & STATE ---
+        let issuesData = [];
+        let tableHeaders = [];
+        let currentSort = { key: 'id', direction: 'asc' };
+        
+        // --- DOM ELEMENTS ---
+        const fileUploadInput = document.getElementById('file-upload');
+        
+        /**
+         * Main function to refresh all dynamic parts of the UI.
+         */
+        const refreshUI = () => {
+            updateDashboardStats();
+            updateSystemGlance();
+            renderTableHeader();
+            processAndRenderTable();
+            updateTimestamp();
+        };
+
+        const renderTag = (type, value, isCompact = false) => {
+            const baseClasses = `inline-flex text-xs leading-5 font-semibold rounded-full ${isCompact ? 'px-2 py-0.5' : 'px-3 py-1'}`;
+            let colorClasses = '';
+            // Make sure value is a string to avoid errors with .toLowerCase()
+            const valueStr = String(value || '').toLowerCase();
+
+            if (type === 'status') {
+                if (valueStr.includes('ready')) colorClasses = 'bg-heineken-green text-white';
+                else if (valueStr.includes('closed')) colorClasses = 'bg-status-closed text-white';
+                else if (valueStr.includes('fixing')) colorClasses = 'bg-status-fixing text-white';
+                else if (valueStr.includes('testing')) colorClasses = 'bg-status-testing text-white';
+            } else if (type === 'priority') {
+                if (valueStr === 'high') colorClasses = 'bg-heineken-red text-white';
+                else if (valueStr === 'medium') colorClasses = 'bg-priority-medium text-white';
+                else if (valueStr === 'low') colorClasses = 'bg-gray-400 text-white';
+            }
+            return `<span class="${baseClasses} ${colorClasses}">${value}</span>`;
+        };
+
+        const renderTableHeader = () => {
+            const tableHead = document.getElementById('issues-table-head');
+            tableHead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            
+            tableHeaders.forEach(key => {
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer';
+                th.dataset.sort = key;
+                
+                let name = key.replace(/([A-Z])/g, ' $1'); // Add space before uppercase letters
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+                
+                th.innerHTML = `${name} &#x2195;`;
+                headerRow.appendChild(th);
+            });
+            tableHead.appendChild(headerRow);
+            updateSortIndicators(); // Apply initial sort indicator
+            // Re-attach event listeners to new headers
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', handleSortClick);
+            });
+        };
+
+        const renderTable = (data) => {
+            const tableBody = document.getElementById('issues-table-body');
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                 tableBody.innerHTML = `<tr><td colspan="${tableHeaders.length || 1}" class="text-center py-10 text-gray-500">No issues found. Please upload a file or adjust filters.</td></tr>`;
+                 return;
+            }
+            data.forEach(issue => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                let rowHTML = '';
+                tableHeaders.forEach(header => {
+                    let cellValue = issue[header] || '';
+                    if (header.toLowerCase() === 'status') {
+                        cellValue = renderTag('status', cellValue);
+                    } else if (header.toLowerCase() === 'priority') {
+                        cellValue = renderTag('priority', cellValue);
+                    }
+                    rowHTML += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cellValue}</td>`;
+                });
+                row.innerHTML = rowHTML;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const updateDashboardStats = () => {
+            const getStatusDetails = (status) => {
+                const filteredIssues = issuesData.filter(i => i.status === status);
+                const total = filteredIssues.length;
+                const breakdown = filteredIssues.reduce((acc, issue) => {
+                    const system = issue.system || 'Unassigned';
+                    acc[system] = (acc[system] || 0) + 1;
+                    return acc;
+                }, {});
+                return { total, breakdown };
+            };
+
+            const statusesToUpdate = [
+                { status: 'Ready To Test', countEl: 'card-ready-to-test-count', breakdownEl: 'card-ready-to-test-breakdown', color: 'heineken-green' },
+                { status: 'Testing', countEl: 'card-testing-count', breakdownEl: 'card-testing-breakdown', color: 'status-testing' },
+                { status: 'Fixing', countEl: 'card-fixing-count', breakdownEl: 'card-fixing-breakdown', color: 'status-fixing' }
+            ];
+
+            statusesToUpdate.forEach(({ status, countEl, breakdownEl, color }) => {
+                const details = getStatusDetails(status);
+                document.getElementById(countEl).textContent = details.total;
+                
+                const breakdownContainer = document.getElementById(breakdownEl);
+                breakdownContainer.innerHTML = ''; 
+
+                if (Object.keys(details.breakdown).length > 0) {
+                     const wrapper = document.createElement('div');
+                     wrapper.className = 'flex flex-wrap gap-1';
+                     Object.entries(details.breakdown).forEach(([system, count]) => {
+                        const tag = document.createElement('span');
+                        tag.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${color} bg-opacity-10 text-${color} border border-${color}`;
+                        tag.innerHTML = `${system} <span class="ml-1.5 font-bold">${count}</span>`;
+                        wrapper.appendChild(tag);
+                    });
+                    breakdownContainer.appendChild(wrapper);
+                } else {
+                     breakdownContainer.innerHTML = '<p class="text-gray-400">No issues</p>';
+                }
+            });
+            const closedCount = issuesData.filter(i => i.status === 'Closed').length;
+            document.getElementById('card-closed-count').textContent = closedCount;
+        };
+
+        const updateSystemGlance = () => {
+            const container = document.getElementById('system-glance-container');
+            container.innerHTML = '';
+            const systemData = issuesData
+                .filter(issue => issue.status !== 'Closed')
+                .reduce((acc, issue) => {
+                    const system = issue.system || 'Unassigned';
+                    if (!acc[system]) {
+                        acc[system] = { 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, total: 0 };
+                    }
+                    if (acc[system][issue.status] !== undefined) {
+                        acc[system][issue.status]++;
+                    }
+                    acc[system].total++;
+                    return acc;
+                }, {});
+
+            if (Object.keys(systemData).length === 0) {
+                container.innerHTML = `<p class="text-gray-500 col-span-full">No open issues found for any system.</p>`;
+                return;
+            }
+
+            for (const system in systemData) {
+                const data = systemData[system];
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-sm p-4 flex flex-col';
+                card.innerHTML = `
+                    <div class="flex-grow">
+                        <h4 class="text-lg font-semibold text-gray-800 truncate">${system}</h4>
+                        <p class="text-4xl font-bold text-heineken-green mt-1">${data.total}</p>
+                        <p class="text-sm text-gray-500">Total Open Issue${data.total > 1 ? 's' : ''}</p>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
+                        <div class="flex justify-between items-center text-heineken-green"><span>Ready To Test</span><span class="font-bold text-base">${data['Ready To Test']}</span></div>
+                        <div class="flex justify-between items-center text-status-testing"><span>Testing</span><span class="font-bold text-base">${data['Testing']}</span></div>
+                        <div class="flex justify-between items-center text-status-fixing"><span>Fixing</span><span class="font-bold text-base">${data['Fixing']}</span></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        };
+
+        const processAndRenderTable = () => {
+            const filterStatus = document.getElementById('filter-status').value;
+            const filterPriority = document.getElementById('filter-priority').value;
+            let processedData = issuesData.filter(issue => {
+                const statusMatch = filterStatus === 'all' || issue.status === filterStatus;
+                const priorityMatch = filterPriority === 'all' || issue.priority === filterPriority;
+                return statusMatch && priorityMatch;
+            });
+            processedData.sort((a, b) => {
+                const valA = a[currentSort.key];
+                const valB = b[currentSort.key];
+                let comparison = (valA > valB) ? 1 : (valA < valB) ? -1 : 0;
+                return currentSort.direction === 'desc' ? comparison * -1 : comparison;
+            });
+            renderTable(processedData);
+        };
+        
+        const updateSortIndicators = () => {
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                const key = th.getAttribute('data-sort');
+                let name = key.replace(/([A-Z])/g, ' $1');
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+                if (key === currentSort.key) {
+                    th.innerHTML = `${name} ${currentSort.direction === 'asc' ? '&#x2197;' : '&#x2198;'}`;
+                } else {
+                    th.innerHTML = `${name} &#x2195;`;
+                }
+            });
+        };
+
+        const updateTimestamp = () => {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('last-updated').textContent = `Last Updated: ${now.toLocaleDateString('en-US', options)}`;
+        };
+        
+        const mapData = (jsonData) => {
+            const mapping = {
+                id: ['id', 'ID'], status: ['status', 'Status'], summary: ['summary', 'Summary', 'Title'],
+                system: ['system', 'System'], priority: ['priority', 'Priority'], assignTo: ['assignTo', 'Assign To', 'Assigned To'],
+                createdDate: ['createdDate', 'Created Date', 'Date'], modifiedBy: ['modifiedBy', 'Modified By'],
+                description: ['description', 'Description']
+            };
+            
+            // Dynamically create headers from the first row of data
+            const allHeaders = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
+            const normalizedHeaders = [];
+
+            const mappedRows = jsonData.map(row => {
+                const newRow = {};
+                const usedStandardKeys = new Set();
+                
+                // First pass: map known columns
+                for (const standardKey in mapping) {
+                    const possibleHeaders = mapping[standardKey];
+                    for (const header of possibleHeaders) {
+                        if (row[header] !== undefined) {
+                            newRow[standardKey] = row[header];
+                            usedStandardKeys.add(header);
+                            break;
+                        }
+                    }
+                }
+                
+                // Second pass: add any remaining columns that weren't mapped
+                for(const header of allHeaders) {
+                    if (!usedStandardKeys.has(header)) {
+                         // Normalize header for use as a key (e.g., "Extra Info" -> "extraInfo")
+                        const newKey = header.replace(/\s(.)/g, (match, group1) => group1.toUpperCase()).replace(/\s/g, '').replace(/^(.)/, (match, group1) => group1.toLowerCase());
+                        newRow[newKey] = row[header];
+                    }
+                }
+                return newRow;
+            });
+
+            // Set global table headers from the keys of the first processed row
+            if (mappedRows.length > 0) {
+                tableHeaders = Object.keys(mappedRows[0]);
+            }
+
+            return mappedRows;
+        };
+
+        const handleFileUpload = (event) => {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData && jsonData.length > 0) {
+                        issuesData = mapData(jsonData); 
+                        refreshUI(); 
+                        alert(`${issuesData.length} issues loaded successfully from ${file.name}!`);
+                    } else { alert('Could not find any data in the Excel file.'); }
+                } catch (error) {
+                    console.error("Error parsing Excel file:", error);
+                    alert('There was an error parsing the Excel file.');
+                }
+                event.target.value = '';
+            };
+            reader.onerror = (error) => { console.error("File reading error:", error); alert('Failed to read the file.'); event.target.value = ''; };
+            reader.readAsArrayBuffer(file);
+        };
+
+        const navigateToIssuesAndFilter = (status) => {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-all-issues').classList.remove('hidden');
+            document.getElementById('nav-all-issues').classList.add('bg-heineken-green', 'text-white');
+            document.getElementById('nav-dashboard').classList.remove('bg-heineken-green', 'text-white');
+            document.getElementById('filter-status').value = status;
+            processAndRenderTable();
+            document.getElementById('view-all-issues').scrollIntoView({ behavior: 'smooth' });
+        };
+        
+        const handleSortClick = (event) => {
+            const key = event.currentTarget.dataset.sort;
+            if (currentSort.key === key) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.key = key;
+                currentSort.direction = 'asc';
+            }
+            updateSortIndicators();
+            processAndRenderTable();
+        };
+
+        const setupEventListeners = () => {
+            document.getElementById('nav-dashboard').addEventListener('click', () => {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('view-all-issues').classList.add('hidden');
+                document.getElementById('nav-dashboard').classList.add('bg-heineken-green', 'text-white');
+                document.getElementById('nav-all-issues').classList.remove('bg-heineken-green', 'text-white');
+            });
+            document.getElementById('nav-all-issues').addEventListener('click', () => {
+                document.getElementById('view-dashboard').classList.add('hidden');
+                document.getElementById('view-all-issues').classList.remove('hidden');
+                document.getElementById('nav-all-issues').classList.add('bg-heineken-green', 'text-white');
+                document.getElementById('nav-dashboard').classList.remove('bg-heineken-green', 'text-white');
+            });
+            fileUploadInput.addEventListener('change', handleFileUpload);
+            document.getElementById('filter-status').addEventListener('change', processAndRenderTable);
+            document.getElementById('filter-priority').addEventListener('change', processAndRenderTable);
+            
+            // Click to filter on status cards
+            document.getElementById('card-ready-to-test').addEventListener('click', () => navigateToIssuesAndFilter('Ready To Test'));
+            document.getElementById('card-testing').addEventListener('click', () => navigateToIssuesAndFilter('Testing'));
+            document.getElementById('card-fixing').addEventListener('click', () => navigateToIssuesAndFilter('Fixing'));
+        };
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshUI(); 
+            setupEventListeners();
+        });
+
+    </script>
+</body>
+</html>
