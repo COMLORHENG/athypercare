@@ -52,10 +52,13 @@
                         'heineken-green': '#009a44',
                         'heineken-green-dark': '#007a36',
                         'heineken-red': '#e21a23',
-                        'priority-medium': '#f59e0b', // Amber 500
+                        'priority-p2': '#f59e0b', // Amber 500
+                        'priority-p3': '#3b82f6', // Blue 500
+                        'priority-p4': '#6b7280', // Gray 500
                         'status-testing': '#3b82f6', // Blue 500
                         'status-closed': '#4b5563',   // Gray 600
-                        'status-fixing': '#f59e0b',    // Re-using priority-medium for Fixing
+                        'status-fixing': '#f59e0b',    // Re-using amber for Fixing
+                        'status-pending': '#6366f1',  // Indigo 500
                     }
                 }
             }
@@ -68,29 +71,33 @@
         <!-- Header -->
         <header class="bg-white shadow-md sticky top-0 z-20">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
+                <div class="flex items-center justify-between h-20">
                     <!-- Logo and Title -->
                     <div class="flex items-center space-x-4">
-                        <svg class="h-8 w-auto" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"	 viewBox="0 0 150 36" style="enable-background:new 0 0 150 36;" xml:space="preserve"><style type="text/css">	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#005127;}	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#D8232A;}</style><g>	<path class="st0" d="M150,16.4v0.7c0,0-0.8,0.3-0.8,1.3l0,15.8c0,0.6-0.5,1-1,1h-3.1l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4		h2.5c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C145.4,16.4,150,16.4,150,16.4z M77.2,16.4v17.8c0,0.6-0.5,1-1,1H73		l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4H65c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C73.4,16.4,77.2,16.4,77.2,16.4		z M30.2,16.4h-5.1v7.2h-4.4v-7.2h-5.9v0.7c0,0,0.8,0.3,0.8,1.3v16.8h5.1v-8.1h4.4v8.1h5.1L30.2,16.4L30.2,16.4z M46.7,16.4H35.4		v17.1c0,1,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4		C47.7,16.9,47.2,16.4,46.7,16.4z M57.4,16.4h-5.1v17.8c0,0.6,0.5,1,1,1h4.1V16.4L57.4,16.4z M129.3,16.4H118v17.1		c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4H123v-3.8h7.2v-2.4		C130.3,16.9,129.8,16.4,129.3,16.4z M93.6,16.4H82.3v17.1c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5		c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4C94.6,16.9,94.1,16.4,93.6,16.4L93.6,16.4z M115,16.4h-3.7		c-0.9,0-1.6,0.2-2.3,1l-5.2,5.9v-7h-5.1v17.8c0,0.6,0.5,1,1,1h4.1v-8.5l4.5,7c0.7,1,1.3,1.6,2.9,1.6h4.2l-7.1-11.1L115,16.4		L115,16.4z"/>	<path class="st1" d="M5,23.4c-0.1,0.1-0.3,0.1-0.4-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.4,2.7-8.5,2.7-8.5L0.1,9.3		C-0.1,9.1,0,8.7,0.3,8.7c0.4,0,8.8,0,8.8,0s2.6-8.1,2.7-8.5C11.9,0.1,12,0,12.2,0c0.1,0,0.2,0.1,0.2,0.2c0.1,0.4,2.7,8.5,2.7,8.5		s8.3,0,8.8,0c0.3,0,0.4,0.4,0.2,0.6l-4.2,3.1h-5l-1.5-4.8l-1.5,4.8h-5l4.1,3l-1.5,4.8L5,23.4"/></g></svg>
-                        <span class="text-xl font-semibold text-gray-700 hidden sm:block">Post Go-Live Issue Tracker</span>
+                        <svg class="h-8 w-auto" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"	 viewBox="0 0 150 36" style="enable-background:new 0 0 150 36;" xml:space="preserve"><style type="text/css">	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#005127;}	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#D8232A;}</style><g>	<path class="st0" d="M150,16.4v0.7c0,0-0.8,0.3-0.8,1.3l0,15.8c0,0.6-0.5,1-1,1h-3.1l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4		h2.5c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C145.4,16.4,150,16.4,150,16.4z M77.2,16.4v17.8c0,0.6-0.5,1-1,1H73		l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4H65c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C73.4,16.4,77.2,16.4,77.2,16.4		z M30.2,16.4h-5.1v7.2h-4.4v-7.2h-5.9v0.7c0,0,0.8,0.3,0.8,1.3v16.8h5.1v-8.1h4.4v8.1h5.1L30.2,16.4L30.2,16.4z M46.7,16.4H35.4		v17.1c0,1,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4		C47.7,16.9,47.2,16.4,46.7,16.4z M57.4,16.4h-5.1v17.8c0,0.6,0.5,1,1,1h4.1V16.4L57.4,16.4z M129.3,16.4H118v17.1		c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4H123v-3.8h7.2v-2.4		C130.3,16.9,129.8,16.4,129.3,16.4z M93.6,16.4H82.3v17.1c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5		c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4C94.6,16.9,94.1,16.4,93.6,16.4L93.6,16.4z M115,16.4h-3.7		c-0.9,0-1.6,0.2-2.3,1l-5.2,5.9v-7h-5.1v17.8c0,0.6,0.5,1,1,1h4.1v-8.5l4.5,7c0.7,1,1.3,1.6,2.9,1.6h4.2l-7.1-11.1L115,16.4		L115,16.4z"/>	<path class="st1" d="M5,23.4c-0.1,0.1-0.3,0.1-0.4-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.4,2.7-8.5,2.7-8.5L0.1,9.3		C-0.1,9.1,0,8.7,0.3,8.7c0.4,0,8.8,0,8.8,0s2.6-8.1,2.7-8.5C11.9,0.1,12,0,12.2,0c0.1,0,0.2,0.1,0.2,0.2c0.1,0.4,2.7,8.5,2.7,8.5		s8.3,0,8.8,0c0.3,0,0.4,0.4,0.2,0.6l-4.2,3.1h-5l-1.5-4.8l-1.5,4.8h-5l4.1,3l-1.5,4.8L5,23.4"/></g></svg>
+                        <div>
+                            <span class="text-xl font-semibold text-gray-700 hidden sm:block">Post AT Go-live & Hypercare Issue Tracker</span>
+                             <p id="report-timestamp" class="text-xs text-gray-500"></p>
+                        </div>
                     </div>
-
-                    <!-- Navigation -->
-                    <nav class="flex items-center space-x-2 sm:space-x-4">
-                        <button id="nav-dashboard" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-white bg-heineken-green">Dashboard</button>
-                        <button id="nav-all-issues" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-gray-600 hover:bg-gray-200 hover:text-gray-900">All Issues</button>
-                    </nav>
+                    <div class="flex items-center space-x-6">
+                        <nav class="flex items-center space-x-2 sm:space-x-4">
+                            <button id="nav-dashboard" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-white bg-heineken-green">Dashboard</button>
+                            <button id="nav-all-issues" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-gray-600 hover:bg-gray-200 hover:text-gray-900">All Issues</button>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="container mx-auto p-4 sm:p-6 lg:p-8">
             
-            <!-- Dashboard View -->
             <div id="view-dashboard">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                    <h1 class="text-3xl font-bold text-gray-900">Status At a Glance</h1>
+                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+                    <div class="flex items-baseline space-x-4">
+                        <h2 class="text-2xl font-bold text-gray-900">Total Issues Raised:</h2>
+                        <p id="header-total-issues-count" class="text-4xl font-bold text-gray-800">0</p>
+                    </div>
                     <div class="mt-4 sm:mt-0">
                          <label for="file-upload" class="cursor-pointer inline-flex items-center px-4 py-2 border border-heineken-green text-heineken-green text-sm font-medium rounded-md bg-white hover:bg-green-50">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,58 +109,34 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Stat Card: Ready To Test -->
-                    <div id="card-ready-to-test" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-heineken-green flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
-                        <h3 class="text-base font-medium text-gray-500 truncate">Ready To Test</h3>
-                        <div class="mt-1 flex-grow">
-                            <p id="card-ready-to-test-count" class="text-5xl font-bold text-heineken-green">0</p>
-                        </div>
-                        <div id="card-ready-to-test-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
-                    </div>
-                    <!-- Stat Card: Testing -->
-                    <div id="card-testing" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-testing flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
-                        <h3 class="text-base font-medium text-gray-500 truncate">Testing</h3>
-                        <div class="mt-1 flex-grow">
-                            <p id="card-testing-count" class="text-5xl font-bold text-status-testing">0</p>
-                        </div>
-                         <div id="card-testing-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
-                    </div>
-                    <!-- Stat Card: Fixing -->
-                    <div id="card-fixing" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-fixing flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
-                        <h3 class="text-base font-medium text-gray-500 truncate">Fixing</h3>
-                        <div class="mt-1 flex-grow">
-                            <p id="card-fixing-count" class="text-5xl font-bold text-status-fixing">0</p>
-                        </div>
-                         <div id="card-fixing-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
-                    </div>
-                    <!-- Stat Card: Closed -->
-                    <div id="card-closed" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-closed flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
-                        <h3 class="text-base font-medium text-gray-500 truncate">Closed</h3>
-                        <div class="mt-1 flex-grow">
-                            <p id="card-closed-count" class="text-5xl font-bold text-status-closed">0</p>
-                        </div>
-                        <div id="card-closed-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
-                    </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Status At a Glance</h2>
+                <div id="status-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <!-- Status cards will be inserted here in the correct order -->
                 </div>
 
-                <!-- Issues by System Glance -->
-                <div id="system-glance-view" class="mt-12">
+                <div class="mt-12">
+                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by Department</h2>
+                     <div id="department-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <div class="mt-12">
+                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by Priority</h2>
+                     <div id="priority-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+                </div>
+
+                <div class="mt-12">
                      <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by System</h2>
-                     <div id="system-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                         <!-- System cards will be inserted here -->
-                     </div>
+                     <div id="system-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
             </div>
 
-            <!-- All Issues View -->
             <div id="view-all-issues" class="hidden">
                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                     <h1 class="text-3xl font-bold text-gray-900">All Issues</h1>
-                     <!-- Filters -->
-                    <div class="flex items-center space-x-2 mt-4 sm:mt-0">
+                    <div class="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
                          <select id="filter-status" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
                              <option value="all">All Statuses</option>
+                             <option value="Pending">Pending</option>
                              <option value="Ready To Test">Ready To Test</option>
                              <option value="Testing">Testing</option>
                              <option value="Fixing">Fixing</option>
@@ -161,18 +144,17 @@
                          </select>
                          <select id="filter-priority" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
                              <option value="all">All Priorities</option>
-                             <option value="High">High</option>
-                             <option value="Medium">Medium</option>
-                             <option value="Low">Low</option>
+                             <option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option><option value="P4">P4</option>
                          </select>
                          <select id="filter-system" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
                             <option value="all">All Systems</option>
-                            <!-- System options will be populated dynamically -->
+                         </select>
+                          <select id="filter-department" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                            <option value="all">All Departments</option>
                          </select>
                     </div>
                  </div>
                 
-                <!-- Issues Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead id="issues-table-head" class="bg-gray-50"></thead>
@@ -182,34 +164,22 @@
             </div>
         </main>
         
-        <!-- Footer -->
         <footer class="text-center py-4 text-sm text-gray-500 mt-8">
             <p>&copy; 2025 The HEINEKEN Company. All Rights Reserved.</p>
             <p id="last-updated" class="mt-1"></p>
         </footer>
 
-        <!-- Issue Detail Modal -->
         <div id="issue-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
             <div class="modal-container bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95">
-                <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 border-b border-gray-200">
                     <h2 id="modal-title" class="text-lg font-semibold text-gray-800"></h2>
                     <button id="modal-close-btn" class="text-gray-400 hover:text-gray-700">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <!-- Modal Body -->
                 <div class="flex-grow p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Left Column -->
-                    <div id="modal-main-content" class="md:col-span-2">
-                        <!-- Main content like description will be injected here -->
-                    </div>
-                    <!-- Right Column -->
-                    <div class="md:col-span-1 space-y-4">
-                        <div id="modal-details-panel">
-                            <!-- Details like status, priority etc. will be injected here -->
-                        </div>
-                    </div>
+                    <div id="modal-main-content" class="md:col-span-2"></div>
+                    <div class="md:col-span-1 space-y-4"><div id="modal-details-panel"></div></div>
                 </div>
             </div>
         </div>
@@ -221,18 +191,17 @@
         let tableHeaders = [];
         let currentSort = { key: 'id', direction: 'asc' };
         
-        // --- DOM ELEMENTS ---
         const fileUploadInput = document.getElementById('file-upload');
         const modal = document.getElementById('issue-modal');
         const modalCloseBtn = document.getElementById('modal-close-btn');
         
-        /**
-         * Main function to refresh all dynamic parts of the UI.
-         */
         const refreshUI = () => {
+            updateHeaderAndTotalIssues();
             updateDashboardStats();
+            updatePriorityGlance();
+            updateDepartmentGlance();
             updateSystemGlance();
-            populateSystemFilter();
+            populateFilters();
             renderTableHeader();
             processAndRenderTable();
             updateTimestamp();
@@ -244,14 +213,16 @@
             const valueStr = String(value || '').toLowerCase();
 
             if (type === 'status') {
-                if (valueStr.includes('ready')) colorClasses = 'bg-heineken-green text-white';
+                if (valueStr.includes('pending')) colorClasses = 'bg-status-pending text-white';
+                else if (valueStr.includes('ready')) colorClasses = 'bg-heineken-green text-white';
                 else if (valueStr.includes('closed')) colorClasses = 'bg-status-closed text-white';
                 else if (valueStr.includes('fixing')) colorClasses = 'bg-status-fixing text-white';
                 else if (valueStr.includes('testing')) colorClasses = 'bg-status-testing text-white';
             } else if (type === 'priority') {
-                if (valueStr === 'high') colorClasses = 'bg-heineken-red text-white';
-                else if (valueStr === 'medium') colorClasses = 'bg-priority-medium text-white';
-                else if (valueStr === 'low') colorClasses = 'bg-gray-400 text-white';
+                if (valueStr === 'p1') colorClasses = 'bg-heineken-red text-white';
+                else if (valueStr === 'p2') colorClasses = 'bg-priority-p2 text-white';
+                else if (valueStr === 'p3') colorClasses = 'bg-priority-p3 text-white';
+                else if (valueStr === 'p4') colorClasses = 'bg-priority-p4 text-white';
             }
             return `<span class="${baseClasses} ${colorClasses}">${value}</span>`;
         };
@@ -266,10 +237,7 @@
                 th.scope = 'col';
                 th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer';
                 th.dataset.sort = key;
-                
-                let name = key.replace(/([A-Z])/g, ' $1');
-                name = name.charAt(0).toUpperCase() + name.slice(1);
-                
+                let name = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                 th.innerHTML = `${name} &#x2195;`;
                 headerRow.appendChild(th);
             });
@@ -300,9 +268,18 @@
                 tableBody.appendChild(row);
             });
         };
+        
+        const updateHeaderAndTotalIssues = () => {
+            document.getElementById('header-total-issues-count').textContent = issuesData.length;
+        };
 
         const updateDashboardStats = () => {
-            const getStatusDetails = (status) => {
+            const container = document.getElementById('status-glance-container');
+            container.innerHTML = ''; // Clear existing cards first
+
+            const statusesInOrder = ['Ready To Test', 'Fixing', 'Testing', 'Pending', 'Closed'];
+
+            statusesInOrder.forEach(status => {
                 const filteredIssues = issuesData.filter(i => i.status === status);
                 const total = filteredIssues.length;
                 const breakdown = filteredIssues.reduce((acc, issue) => {
@@ -310,25 +287,25 @@
                     acc[system] = (acc[system] || 0) + 1;
                     return acc;
                 }, {});
-                return { total, breakdown };
-            };
 
-            const statusesToUpdate = [
-                { status: 'Ready To Test', countEl: 'card-ready-to-test-count', breakdownEl: 'card-ready-to-test-breakdown', color: 'heineken-green' },
-                { status: 'Testing', countEl: 'card-testing-count', breakdownEl: 'card-testing-breakdown', color: 'status-testing' },
-                { status: 'Fixing', countEl: 'card-fixing-count', breakdownEl: 'card-fixing-breakdown', color: 'status-fixing' },
-                { status: 'Closed', countEl: 'card-closed-count', breakdownEl: 'card-closed-breakdown', color: 'status-closed' }
-            ];
+                let color = 'gray-500';
+                if (status === 'Ready To Test') color = 'heineken-green';
+                else if (status === 'Fixing') color = 'status-fixing';
+                else if (status === 'Testing') color = 'status-testing';
+                else if (status === 'Pending') color = 'status-pending';
+                else if (status === 'Closed') color = 'status-closed';
 
-            statusesToUpdate.forEach(({ status, countEl, breakdownEl, color }) => {
-                const details = getStatusDetails(status);
-                document.getElementById(countEl).textContent = details.total;
-                const breakdownContainer = document.getElementById(breakdownEl);
-                breakdownContainer.innerHTML = '';
-                if (Object.keys(details.breakdown).length > 0) {
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-lg shadow-sm p-6 border-t-4 border-${color} flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300`;
+                card.addEventListener('click', () => navigateToIssuesAndFilter(status));
+                
+                const breakdownContainer = document.createElement('div');
+                breakdownContainer.className = 'text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1';
+                
+                if (Object.keys(breakdown).length > 0) {
                      const wrapper = document.createElement('div');
                      wrapper.className = 'flex flex-wrap gap-1';
-                     Object.entries(details.breakdown).forEach(([system, count]) => {
+                     Object.entries(breakdown).forEach(([system, count]) => {
                         const tag = document.createElement('span');
                         tag.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${color} bg-opacity-10 text-${color} border border-${color}`;
                         tag.innerHTML = `${system} <span class="ml-1.5 font-bold">${count}</span>`;
@@ -338,69 +315,176 @@
                 } else {
                      breakdownContainer.innerHTML = '<p class="text-gray-400">No issues</p>';
                 }
+
+                card.innerHTML = `
+                    <h3 class="text-base font-medium text-gray-500 truncate">${status}</h3>
+                    <div class="mt-1 flex-grow"><p class="text-5xl font-bold text-${color}">${total}</p></div>
+                `;
+                card.appendChild(breakdownContainer);
+                container.appendChild(card);
             });
+        };
+        
+        const createGlanceCard = (title, total, colorClass, breakdown, clickHandler, emoji = '') => {
+            const card = document.createElement('div');
+            card.className = `bg-white rounded-lg shadow-sm p-4 flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300 border-l-4 ${colorClass}`;
+            if(clickHandler) card.addEventListener('click', clickHandler);
+            card.innerHTML = `
+                <div class="flex-grow">
+                    <h4 class="text-md font-semibold text-gray-800 truncate">${emoji} ${title}</h4>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">${total}</p>
+                    <p class="text-sm text-gray-500">Total Issue${total !== 1 ? 's' : ''}</p>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 space-y-1 text-sm">${breakdown || ''}</div>
+            `;
+            return card;
+        };
+
+        const getDeptVisuals = (deptName) => {
+            const colors = ['border-blue-500', 'border-purple-500', 'border-pink-500', 'border-teal-500', 'border-orange-500'];
+            const emojis = ['🏢', '💼', '📈', '💻', '📊', '📞', '🧑‍💻', '🛒'];
+            let hash = 0;
+            for (let i = 0; i < deptName.length; i++) hash = deptName.charCodeAt(i) + ((hash << 5) - hash);
+            return { color: colors[Math.abs(hash) % colors.length], emoji: emojis[Math.abs(hash) % emojis.length] };
+        };
+        
+        const updatePriorityGlance = () => {
+            const container = document.getElementById('priority-glance-container');
+            container.innerHTML = '';
+            const priorities = { 'P1': 'border-heineken-red', 'P2': 'border-priority-p2', 'P3': 'border-priority-p3', 'P4': 'border-priority-p4' };
+
+            for(const priority in priorities) {
+                const color = priorities[priority];
+                const issues = issuesData.filter(i => String(i.priority).toUpperCase() === priority);
+                const total = issues.length;
+                
+                const statusBreakdown = issues.reduce((acc, issue) => { acc[issue.status] = (acc[issue.status] || 0) + 1; return acc; }, {});
+                let breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${statusBreakdown['Pending'] || 0}</span></div>
+                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${statusBreakdown['Ready To Test'] || 0}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${statusBreakdown['Testing'] || 0}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${statusBreakdown['Fixing'] || 0}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${statusBreakdown['Closed'] || 0}</span></div>
+                `;
+
+                breakdownHTML += '<div class="border-t border-gray-100 my-2"></div>';
+                
+                const deptBreakdown = issues.reduce((acc, issue) => { acc[issue.department || 'Unassigned'] = (acc[issue.department || 'Unassigned'] || 0) + 1; return acc; }, {});
+                breakdownHTML += '<div class="font-semibold text-xs uppercase text-gray-400 mb-2">By Department</div>';
+                const deptWrapper = document.createElement('div');
+                deptWrapper.className = 'flex flex-wrap gap-1';
+                Object.entries(deptBreakdown).forEach(([dept, count]) => {
+                    const { color: deptColor, emoji } = getDeptVisuals(dept);
+                    const baseColor = deptColor.replace('border-', '');
+                    const tag = document.createElement('span');
+                    tag.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${baseColor}-100 text-${baseColor}-800`;
+                    tag.innerHTML = `${emoji} ${dept} <span class="ml-1.5 font-bold">${count}</span>`;
+                    deptWrapper.appendChild(tag);
+                });
+                breakdownHTML += deptWrapper.outerHTML;
+
+
+                container.appendChild(createGlanceCard(priority, total, color, breakdownHTML, () => navigateToIssuesAndFilter(undefined, undefined, priority)));
+            }
+        };
+        
+        const updateDepartmentGlance = () => {
+            const container = document.getElementById('department-glance-container');
+            container.innerHTML = '';
+            const deptData = issuesData.reduce((acc, issue) => {
+                const dept = issue.department || 'Unassigned';
+                if (!acc[dept]) acc[dept] = { 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
+                if (acc[dept][issue.status] !== undefined) acc[dept][issue.status]++;
+                acc[dept].total++;
+                return acc;
+            }, {});
+
+            if (Object.keys(deptData).length === 0) {
+                container.innerHTML = `<p class="text-gray-500 col-span-full">No departments found.</p>`; return;
+            }
+
+            for(const dept in deptData) {
+                 const data = deptData[dept];
+                 const { color, emoji } = getDeptVisuals(dept);
+                 const breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
+                `;
+                container.appendChild(createGlanceCard(dept, data.total, color, breakdownHTML, () => navigateToIssuesAndFilter(undefined, undefined, undefined, dept), emoji));
+            }
         };
 
         const updateSystemGlance = () => {
             const container = document.getElementById('system-glance-container');
             container.innerHTML = '';
-            const systemData = issuesData.filter(issue => issue.status !== 'Closed').reduce((acc, issue) => {
+            const systemData = issuesData.reduce((acc, issue) => {
                 const system = issue.system || 'Unassigned';
-                if (!acc[system]) acc[system] = { 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, total: 0 };
+                if (!acc[system]) acc[system] = { 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
                 if (acc[system][issue.status] !== undefined) acc[system][issue.status]++;
                 acc[system].total++;
                 return acc;
             }, {});
 
             if (Object.keys(systemData).length === 0) {
-                container.innerHTML = `<p class="text-gray-500 col-span-full">No open issues found for any system.</p>`;
-                return;
+                container.innerHTML = `<p class="text-gray-500 col-span-full">No systems found.</p>`; return;
             }
 
             for (const system in systemData) {
-                const data = systemData[system];
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow-sm p-4 flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300';
-                card.addEventListener('click', () => navigateToIssuesAndFilter(undefined, system));
-                card.innerHTML = `
-                    <div class="flex-grow">
-                        <h4 class="text-lg font-semibold text-gray-800 truncate">${system}</h4>
-                        <p class="text-4xl font-bold text-heineken-green mt-1">${data.total}</p>
-                        <p class="text-sm text-gray-500">Total Open Issue${data.total > 1 ? 's' : ''}</p>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
-                        <div class="flex justify-between items-center text-heineken-green"><span>Ready To Test</span><span class="font-bold text-base">${data['Ready To Test']}</span></div>
-                        <div class="flex justify-between items-center text-status-testing"><span>Testing</span><span class="font-bold text-base">${data['Testing']}</span></div>
-                        <div class="flex justify-between items-center text-status-fixing"><span>Fixing</span><span class="font-bold text-base">${data['Fixing']}</span></div>
-                    </div>
+                 const data = systemData[system];
+                 const breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
                 `;
-                container.appendChild(card);
+                 container.appendChild(createGlanceCard(system, data.total, 'border-heineken-green', breakdownHTML, () => navigateToIssuesAndFilter(undefined, system)));
             }
         };
         
-        const populateSystemFilter = () => {
-            const systemFilter = document.getElementById('filter-system');
-            const currentVal = systemFilter.value;
-            systemFilter.innerHTML = '<option value="all">All Systems</option>'; // Reset
-            const systems = [...new Set(issuesData.map(i => i.system).filter(Boolean))];
-            systems.sort().forEach(system => {
-                const option = document.createElement('option');
-                option.value = system;
-                option.textContent = system;
-                systemFilter.appendChild(option);
-            });
-            systemFilter.value = currentVal;
+        const populateFilters = () => {
+            const populate = (filterEl, key) => {
+                const currentVal = filterEl.value;
+                const options = filterEl.querySelectorAll('option:not([value="all"])');
+                options.forEach(o => o.remove());
+                let items;
+                if (key === 'priority') {
+                    items = ['P1', 'P2', 'P3', 'P4']; // Fixed list for priority
+                } else {
+                    items = [...new Set(issuesData.map(i => i[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+                }
+                
+                items.forEach(item => {
+                    if (filterEl.querySelector(`option[value="${item}"]`)) return;
+                    const option = document.createElement('option');
+                    option.value = item; option.textContent = item;
+                    filterEl.appendChild(option);
+                });
+                if ([...filterEl.options].some(o => o.value === currentVal)) {
+                    filterEl.value = currentVal;
+                } else {
+                    filterEl.value = 'all';
+                }
+            };
+            populate(document.getElementById('filter-system'), 'system');
+            populate(document.getElementById('filter-department'), 'department');
         };
 
         const processAndRenderTable = () => {
             const filterStatus = document.getElementById('filter-status').value;
             const filterPriority = document.getElementById('filter-priority').value;
             const filterSystem = document.getElementById('filter-system').value;
+            const filterDept = document.getElementById('filter-department').value;
+            
             let processedData = issuesData.filter(issue => {
                 const statusMatch = filterStatus === 'all' || issue.status === filterStatus;
-                const priorityMatch = filterPriority === 'all' || issue.priority === filterPriority;
+                const priorityMatch = filterPriority === 'all' || String(issue.priority).toUpperCase() === filterPriority;
                 const systemMatch = filterSystem === 'all' || issue.system === filterSystem;
-                return statusMatch && priorityMatch && systemMatch;
+                const deptMatch = filterDept === 'all' || issue.department === filterDept;
+                return statusMatch && priorityMatch && systemMatch && deptMatch;
             });
             processedData.sort((a, b) => {
                 const valA = a[currentSort.key]; const valB = b[currentSort.key];
@@ -414,71 +498,57 @@
             document.querySelectorAll('th[data-sort]').forEach(th => {
                 const key = th.dataset.sort;
                 let name = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                th.innerHTML = key === currentSort.key 
-                    ? `${name} ${currentSort.direction === 'asc' ? '&#x2197;' : '&#x2198;'}`
-                    : `${name} &#x2195;`;
+                th.innerHTML = key === currentSort.key ? `${name} ${currentSort.direction === 'asc' ? '&#x2197;' : '&#x2198;'}` : `${name} &#x2195;`;
             });
         };
 
         const updateTimestamp = () => {
-            document.getElementById('last-updated').textContent = `Last Updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+            const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('report-timestamp').textContent = `Report Generated: ${now}`;
+            document.getElementById('last-updated').textContent = `Last Data Upload: ${now}`;
         };
         
-        const mapData = (jsonData) => {
-             if (!jsonData || jsonData.length === 0) return [];
-
-            const firstRow = jsonData[0];
-            const originalHeaders = Object.keys(firstRow);
-
-            const headerMapping = {
-                id: ['id'], status: ['status'], summary: ['summary', 'title'],
-                system: ['system'], priority: ['priority'], assignTo: ['assignto', 'assign to', 'assigned to'],
-                createdDate: ['createddate', 'created date', 'date'], description: ['description']
+       const mapData = (jsonData) => {
+            if (!jsonData || jsonData.length === 0) return [];
+            const standardOrder = ['id', 'status', 'summary', 'system', 'priority', 'department', 'assignTo', 'createdDate', 'description'];
+            const mapping = {
+                id: ['id'], status: ['status'], summary: ['summary', 'title'], system: ['system'],
+                priority: ['priority'], assignTo: ['assignto', 'assign to', 'assigned to'],
+                createdDate: ['createddate', 'created date', 'date'], description: ['description'],
+                department: ['department', 'dept']
             };
-
-            const fileHeaderToStandardKeyMap = {};
-            const standardKeyToOriginalHeaderMap = {};
-
-            originalHeaders.forEach(header => {
-                const headerLower = header.toLowerCase().replace(/\s/g, '');
-                for (const standardKey in headerMapping) {
-                    if (headerMapping[standardKey].includes(headerLower)) {
-                        fileHeaderToStandardKeyMap[header] = standardKey;
-                        standardKeyToOriginalHeaderMap[standardKey] = header;
-                        return;
-                    }
-                }
-            });
 
             const mappedData = jsonData.map(row => {
                 const newRow = {};
                 for (const originalHeader in row) {
-                    const standardKey = fileHeaderToStandardKeyMap[originalHeader];
+                    const headerLower = originalHeader.toLowerCase().replace(/\s/g, '');
+                    let standardKey = null;
+                    for (const key in mapping) {
+                        if (mapping[key].includes(headerLower)) {
+                            standardKey = key;
+                            break;
+                        }
+                    }
                     if (standardKey) {
-                        newRow[standardKey] = row[originalHeader];
+                         newRow[standardKey] = row[originalHeader];
                     } else {
-                        // Keep unmapped columns with their original header
-                        newRow[originalHeader] = row[originalHeader];
+                         const newKey = originalHeader.replace(/\s(.)/g, (m, g) => g.toUpperCase()).replace(/\s/g, '').replace(/^(.)/, (m, g) => g.toLowerCase());
+                         newRow[newKey] = row[originalHeader];
                     }
                 }
                 return newRow;
             });
 
-            const standardOrder = ['id', 'status', 'summary', 'system', 'priority', 'assignTo', 'createdDate', 'description'];
             const allKeys = new Set();
             mappedData.forEach(row => Object.keys(row).forEach(key => allKeys.add(key)));
-            
             tableHeaders = [...standardOrder.filter(h => allKeys.has(h)), ...[...allKeys].filter(h => !standardOrder.includes(h))];
-
             return mappedData;
         };
 
         const showIssueModal = (issue) => {
             document.getElementById('modal-title').textContent = `[${issue.id || 'N/A'}] ${issue.summary || 'No Summary'}`;
-            
             const mainContent = document.getElementById('modal-main-content');
-            mainContent.innerHTML = ''; // Clear previous
-            
+            mainContent.innerHTML = ''; 
             const detailsPanel = document.getElementById('modal-details-panel');
             detailsPanel.innerHTML = '';
             
@@ -489,32 +559,24 @@
                 return item;
             };
             
-            const standardDetailKeys = new Set(['status', 'priority', 'system', 'assignTo', 'createdDate']);
-
-            // Populate right-side details panel
+            const standardDetailKeys = new Set(['status', 'priority', 'system', 'assignTo', 'createdDate', 'department']);
+            
             detailsPanel.appendChild(createDetailItem('Status', issue.status, true, 'status'));
             detailsPanel.appendChild(createDetailItem('Priority', issue.priority, true, 'priority'));
             detailsPanel.appendChild(createDetailItem('System', issue.system));
+            detailsPanel.appendChild(createDetailItem('Department', issue.department));
             detailsPanel.appendChild(createDetailItem('Assignee', issue.assignTo));
             detailsPanel.appendChild(createDetailItem('Created Date', issue.createdDate));
 
-            // Populate main content with description and other fields
-            for (const key in issue) {
-                if (key === 'description') {
-                    const descContainer = document.createElement('div');
-                    descContainer.innerHTML = `
-                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Description</h3>
-                        <div class="prose max-w-none text-gray-700">${issue.description || '<p class="text-gray-500 italic">No description provided.</p>'}</div>
-                    `;
-                    mainContent.appendChild(descContainer);
-                } else if (!standardDetailKeys.has(key) && key !== 'id' && key !== 'summary') {
-                    // Add any other fields to the main content area
-                    const otherDetail = createDetailItem(key, issue[key]);
-                    otherDetail.classList.add('pt-4', 'border-t', 'border-gray-200');
-                    mainContent.appendChild(otherDetail);
-                }
-            }
-
+            let hasMainContent = false;
+            tableHeaders.forEach(key => {
+                 if (!standardDetailKeys.has(key) && key !== 'id' && key !== 'summary') {
+                    const contentItem = createDetailItem(key, issue[key]);
+                    mainContent.appendChild(contentItem);
+                    hasMainContent = true;
+                 }
+            });
+            if (!hasMainContent) mainContent.innerHTML = '<p class="text-gray-500 italic">No additional details provided.</p>';
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('.modal-container').classList.remove('scale-95');}, 10);
@@ -544,22 +606,20 @@
             reader.readAsArrayBuffer(file);
         };
 
-        const navigateToIssuesAndFilter = (status, system) => {
+        const navigateToIssuesAndFilter = (status, system, priority, department) => {
             document.getElementById('nav-all-issues').click();
             document.getElementById('filter-status').value = status || 'all';
             document.getElementById('filter-system').value = system || 'all';
+            document.getElementById('filter-priority').value = priority || 'all';
+            document.getElementById('filter-department').value = department || 'all';
             processAndRenderTable();
             document.getElementById('view-all-issues').scrollIntoView({ behavior: 'smooth' });
         };
         
         const handleSortClick = (event) => {
             const key = event.currentTarget.dataset.sort;
-            if (currentSort.key === key) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.key = key;
-                currentSort.direction = 'asc';
-            }
+            if (currentSort.key === key) currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            else { currentSort.key = key; currentSort.direction = 'asc'; }
             updateSortIndicators();
             processAndRenderTable();
         };
@@ -574,20 +634,14 @@
                 document.getElementById('view-all-issues').classList.remove('hidden');
             });
             fileUploadInput.addEventListener('change', handleFileUpload);
-            document.getElementById('filter-status').addEventListener('change', processAndRenderTable);
-            document.getElementById('filter-priority').addEventListener('change', processAndRenderTable);
-            document.getElementById('filter-system').addEventListener('change', processAndRenderTable);
+            ['filter-status', 'filter-priority', 'filter-system', 'filter-department'].forEach(id => {
+                document.getElementById(id).addEventListener('change', processAndRenderTable);
+            });
             
-            document.getElementById('card-ready-to-test').addEventListener('click', () => navigateToIssuesAndFilter('Ready To Test'));
-            document.getElementById('card-testing').addEventListener('click', () => navigateToIssuesAndFilter('Testing'));
-            document.getElementById('card-fixing').addEventListener('click', () => navigateToIssuesAndFilter('Fixing'));
-            document.getElementById('card-closed').addEventListener('click', () => navigateToIssuesAndFilter('Closed'));
-
             modalCloseBtn.addEventListener('click', hideIssueModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) hideIssueModal(); });
         };
 
-        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             refreshUI(); 
             setupEventListeners();
