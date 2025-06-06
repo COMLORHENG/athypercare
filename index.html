@@ -36,6 +36,13 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #007a36;
         }
+        /* Styles for the modal */
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-container {
+            transition: transform 0.3s ease;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -158,18 +165,18 @@
                              <option value="Medium">Medium</option>
                              <option value="Low">Low</option>
                          </select>
+                         <select id="filter-system" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                            <option value="all">All Systems</option>
+                            <!-- System options will be populated dynamically -->
+                         </select>
                     </div>
                  </div>
                 
                 <!-- Issues Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead id="issues-table-head" class="bg-gray-50">
-                            <!-- Dynamic header will be inserted here -->
-                        </thead>
-                        <tbody id="issues-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Table rows will be inserted here by JavaScript -->
-                        </tbody>
+                        <thead id="issues-table-head" class="bg-gray-50"></thead>
+                        <tbody id="issues-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
             </div>
@@ -180,6 +187,32 @@
             <p>&copy; 2025 The HEINEKEN Company. All Rights Reserved.</p>
             <p id="last-updated" class="mt-1"></p>
         </footer>
+
+        <!-- Issue Detail Modal -->
+        <div id="issue-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
+            <div class="modal-container bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h2 id="modal-title" class="text-lg font-semibold text-gray-800"></h2>
+                    <button id="modal-close-btn" class="text-gray-400 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <!-- Modal Body -->
+                <div class="flex-grow p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Left Column -->
+                    <div id="modal-main-content" class="md:col-span-2">
+                        <!-- Main content like description will be injected here -->
+                    </div>
+                    <!-- Right Column -->
+                    <div class="md:col-span-1 space-y-4">
+                        <div id="modal-details-panel">
+                            <!-- Details like status, priority etc. will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -190,6 +223,8 @@
         
         // --- DOM ELEMENTS ---
         const fileUploadInput = document.getElementById('file-upload');
+        const modal = document.getElementById('issue-modal');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
         
         /**
          * Main function to refresh all dynamic parts of the UI.
@@ -197,15 +232,15 @@
         const refreshUI = () => {
             updateDashboardStats();
             updateSystemGlance();
+            populateSystemFilter();
             renderTableHeader();
             processAndRenderTable();
             updateTimestamp();
         };
 
         const renderTag = (type, value, isCompact = false) => {
-            const baseClasses = `inline-flex text-xs leading-5 font-semibold rounded-full ${isCompact ? 'px-2 py-0.5' : 'px-3 py-1'}`;
+            const baseClasses = `inline-flex items-center text-xs leading-5 font-semibold rounded-full ${isCompact ? 'px-2 py-0.5' : 'px-3 py-1'}`;
             let colorClasses = '';
-            // Make sure value is a string to avoid errors with .toLowerCase()
             const valueStr = String(value || '').toLowerCase();
 
             if (type === 'status') {
@@ -232,18 +267,15 @@
                 th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer';
                 th.dataset.sort = key;
                 
-                let name = key.replace(/([A-Z])/g, ' $1'); // Add space before uppercase letters
+                let name = key.replace(/([A-Z])/g, ' $1');
                 name = name.charAt(0).toUpperCase() + name.slice(1);
                 
                 th.innerHTML = `${name} &#x2195;`;
                 headerRow.appendChild(th);
             });
             tableHead.appendChild(headerRow);
-            updateSortIndicators(); // Apply initial sort indicator
-            // Re-attach event listeners to new headers
-            document.querySelectorAll('th[data-sort]').forEach(th => {
-                th.addEventListener('click', handleSortClick);
-            });
+            updateSortIndicators();
+            document.querySelectorAll('th[data-sort]').forEach(th => th.addEventListener('click', handleSortClick));
         };
 
         const renderTable = (data) => {
@@ -255,15 +287,13 @@
             }
             data.forEach(issue => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
+                row.className = 'hover:bg-gray-100 cursor-pointer';
+                row.addEventListener('click', () => showIssueModal(issue));
                 let rowHTML = '';
                 tableHeaders.forEach(header => {
                     let cellValue = issue[header] || '';
-                    if (header.toLowerCase() === 'status') {
-                        cellValue = renderTag('status', cellValue);
-                    } else if (header.toLowerCase() === 'priority') {
-                        cellValue = renderTag('priority', cellValue);
-                    }
+                    if (header.toLowerCase() === 'status') cellValue = renderTag('status', cellValue);
+                    else if (header.toLowerCase() === 'priority') cellValue = renderTag('priority', cellValue);
                     rowHTML += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cellValue}</td>`;
                 });
                 row.innerHTML = rowHTML;
@@ -293,10 +323,8 @@
             statusesToUpdate.forEach(({ status, countEl, breakdownEl, color }) => {
                 const details = getStatusDetails(status);
                 document.getElementById(countEl).textContent = details.total;
-                
                 const breakdownContainer = document.getElementById(breakdownEl);
-                breakdownContainer.innerHTML = ''; 
-
+                breakdownContainer.innerHTML = '';
                 if (Object.keys(details.breakdown).length > 0) {
                      const wrapper = document.createElement('div');
                      wrapper.className = 'flex flex-wrap gap-1';
@@ -316,19 +344,13 @@
         const updateSystemGlance = () => {
             const container = document.getElementById('system-glance-container');
             container.innerHTML = '';
-            const systemData = issuesData
-                .filter(issue => issue.status !== 'Closed')
-                .reduce((acc, issue) => {
-                    const system = issue.system || 'Unassigned';
-                    if (!acc[system]) {
-                        acc[system] = { 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, total: 0 };
-                    }
-                    if (acc[system][issue.status] !== undefined) {
-                        acc[system][issue.status]++;
-                    }
-                    acc[system].total++;
-                    return acc;
-                }, {});
+            const systemData = issuesData.filter(issue => issue.status !== 'Closed').reduce((acc, issue) => {
+                const system = issue.system || 'Unassigned';
+                if (!acc[system]) acc[system] = { 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, total: 0 };
+                if (acc[system][issue.status] !== undefined) acc[system][issue.status]++;
+                acc[system].total++;
+                return acc;
+            }, {});
 
             if (Object.keys(systemData).length === 0) {
                 container.innerHTML = `<p class="text-gray-500 col-span-full">No open issues found for any system.</p>`;
@@ -338,7 +360,8 @@
             for (const system in systemData) {
                 const data = systemData[system];
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow-sm p-4 flex flex-col';
+                card.className = 'bg-white rounded-lg shadow-sm p-4 flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300';
+                card.addEventListener('click', () => navigateToIssuesAndFilter(undefined, system));
                 card.innerHTML = `
                     <div class="flex-grow">
                         <h4 class="text-lg font-semibold text-gray-800 truncate">${system}</h4>
@@ -354,18 +377,33 @@
                 container.appendChild(card);
             }
         };
+        
+        const populateSystemFilter = () => {
+            const systemFilter = document.getElementById('filter-system');
+            const currentVal = systemFilter.value;
+            systemFilter.innerHTML = '<option value="all">All Systems</option>'; // Reset
+            const systems = [...new Set(issuesData.map(i => i.system).filter(Boolean))];
+            systems.sort().forEach(system => {
+                const option = document.createElement('option');
+                option.value = system;
+                option.textContent = system;
+                systemFilter.appendChild(option);
+            });
+            systemFilter.value = currentVal;
+        };
 
         const processAndRenderTable = () => {
             const filterStatus = document.getElementById('filter-status').value;
             const filterPriority = document.getElementById('filter-priority').value;
+            const filterSystem = document.getElementById('filter-system').value;
             let processedData = issuesData.filter(issue => {
                 const statusMatch = filterStatus === 'all' || issue.status === filterStatus;
                 const priorityMatch = filterPriority === 'all' || issue.priority === filterPriority;
-                return statusMatch && priorityMatch;
+                const systemMatch = filterSystem === 'all' || issue.system === filterSystem;
+                return statusMatch && priorityMatch && systemMatch;
             });
             processedData.sort((a, b) => {
-                const valA = a[currentSort.key];
-                const valB = b[currentSort.key];
+                const valA = a[currentSort.key]; const valB = b[currentSort.key];
                 let comparison = (valA > valB) ? 1 : (valA < valB) ? -1 : 0;
                 return currentSort.direction === 'desc' ? comparison * -1 : comparison;
             });
@@ -374,68 +412,118 @@
         
         const updateSortIndicators = () => {
             document.querySelectorAll('th[data-sort]').forEach(th => {
-                const key = th.getAttribute('data-sort');
-                let name = key.replace(/([A-Z])/g, ' $1');
-                name = name.charAt(0).toUpperCase() + name.slice(1);
-                if (key === currentSort.key) {
-                    th.innerHTML = `${name} ${currentSort.direction === 'asc' ? '&#x2197;' : '&#x2198;'}`;
-                } else {
-                    th.innerHTML = `${name} &#x2195;`;
-                }
+                const key = th.dataset.sort;
+                let name = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                th.innerHTML = key === currentSort.key 
+                    ? `${name} ${currentSort.direction === 'asc' ? '&#x2197;' : '&#x2198;'}`
+                    : `${name} &#x2195;`;
             });
         };
 
         const updateTimestamp = () => {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('last-updated').textContent = `Last Updated: ${now.toLocaleDateString('en-US', options)}`;
+            document.getElementById('last-updated').textContent = `Last Updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
         };
         
         const mapData = (jsonData) => {
-            const mapping = {
-                id: ['id', 'ID'], status: ['status', 'Status'], summary: ['summary', 'Summary', 'Title'],
-                system: ['system', 'System'], priority: ['priority', 'Priority'], assignTo: ['assignTo', 'Assign To', 'Assigned To'],
-                createdDate: ['createdDate', 'Created Date', 'Date'], modifiedBy: ['modifiedBy', 'Modified By'],
-                description: ['description', 'Description']
-            };
-            
-            // Dynamically create headers from the first row of data
-            const allHeaders = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
-            const normalizedHeaders = [];
+             if (!jsonData || jsonData.length === 0) return [];
 
-            const mappedRows = jsonData.map(row => {
-                const newRow = {};
-                const usedStandardKeys = new Set();
-                
-                // First pass: map known columns
-                for (const standardKey in mapping) {
-                    const possibleHeaders = mapping[standardKey];
-                    for (const header of possibleHeaders) {
-                        if (row[header] !== undefined) {
-                            newRow[standardKey] = row[header];
-                            usedStandardKeys.add(header);
-                            break;
-                        }
+            const firstRow = jsonData[0];
+            const originalHeaders = Object.keys(firstRow);
+
+            const headerMapping = {
+                id: ['id'], status: ['status'], summary: ['summary', 'title'],
+                system: ['system'], priority: ['priority'], assignTo: ['assignto', 'assign to', 'assigned to'],
+                createdDate: ['createddate', 'created date', 'date'], description: ['description']
+            };
+
+            const fileHeaderToStandardKeyMap = {};
+            const standardKeyToOriginalHeaderMap = {};
+
+            originalHeaders.forEach(header => {
+                const headerLower = header.toLowerCase().replace(/\s/g, '');
+                for (const standardKey in headerMapping) {
+                    if (headerMapping[standardKey].includes(headerLower)) {
+                        fileHeaderToStandardKeyMap[header] = standardKey;
+                        standardKeyToOriginalHeaderMap[standardKey] = header;
+                        return;
                     }
                 }
-                
-                // Second pass: add any remaining columns that weren't mapped
-                for(const header of allHeaders) {
-                    if (!usedStandardKeys.has(header)) {
-                         // Normalize header for use as a key (e.g., "Extra Info" -> "extraInfo")
-                        const newKey = header.replace(/\s(.)/g, (match, group1) => group1.toUpperCase()).replace(/\s/g, '').replace(/^(.)/, (match, group1) => group1.toLowerCase());
-                        newRow[newKey] = row[header];
+            });
+
+            const mappedData = jsonData.map(row => {
+                const newRow = {};
+                for (const originalHeader in row) {
+                    const standardKey = fileHeaderToStandardKeyMap[originalHeader];
+                    if (standardKey) {
+                        newRow[standardKey] = row[originalHeader];
+                    } else {
+                        // Keep unmapped columns with their original header
+                        newRow[originalHeader] = row[originalHeader];
                     }
                 }
                 return newRow;
             });
 
-            // Set global table headers from the keys of the first processed row
-            if (mappedRows.length > 0) {
-                tableHeaders = Object.keys(mappedRows[0]);
+            const standardOrder = ['id', 'status', 'summary', 'system', 'priority', 'assignTo', 'createdDate', 'description'];
+            const allKeys = new Set();
+            mappedData.forEach(row => Object.keys(row).forEach(key => allKeys.add(key)));
+            
+            tableHeaders = [...standardOrder.filter(h => allKeys.has(h)), ...[...allKeys].filter(h => !standardOrder.includes(h))];
+
+            return mappedData;
+        };
+
+        const showIssueModal = (issue) => {
+            document.getElementById('modal-title').textContent = `[${issue.id || 'N/A'}] ${issue.summary || 'No Summary'}`;
+            
+            const mainContent = document.getElementById('modal-main-content');
+            mainContent.innerHTML = ''; // Clear previous
+            
+            const detailsPanel = document.getElementById('modal-details-panel');
+            detailsPanel.innerHTML = '';
+            
+            const createDetailItem = (label, value, isTag = false, tagType = '') => {
+                const item = document.createElement('div');
+                item.className = 'flex flex-col mb-4';
+                item.innerHTML = `<span class="text-sm font-bold text-gray-500 uppercase tracking-wider">${label}</span><div class="mt-1 text-gray-800">${isTag ? renderTag(tagType, value) : (value || '<span class="text-gray-400 italic">N/A</span>')}</div>`;
+                return item;
+            };
+            
+            const standardDetailKeys = new Set(['status', 'priority', 'system', 'assignTo', 'createdDate']);
+
+            // Populate right-side details panel
+            detailsPanel.appendChild(createDetailItem('Status', issue.status, true, 'status'));
+            detailsPanel.appendChild(createDetailItem('Priority', issue.priority, true, 'priority'));
+            detailsPanel.appendChild(createDetailItem('System', issue.system));
+            detailsPanel.appendChild(createDetailItem('Assignee', issue.assignTo));
+            detailsPanel.appendChild(createDetailItem('Created Date', issue.createdDate));
+
+            // Populate main content with description and other fields
+            for (const key in issue) {
+                if (key === 'description') {
+                    const descContainer = document.createElement('div');
+                    descContainer.innerHTML = `
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Description</h3>
+                        <div class="prose max-w-none text-gray-700">${issue.description || '<p class="text-gray-500 italic">No description provided.</p>'}</div>
+                    `;
+                    mainContent.appendChild(descContainer);
+                } else if (!standardDetailKeys.has(key) && key !== 'id' && key !== 'summary') {
+                    // Add any other fields to the main content area
+                    const otherDetail = createDetailItem(key, issue[key]);
+                    otherDetail.classList.add('pt-4', 'border-t', 'border-gray-200');
+                    mainContent.appendChild(otherDetail);
+                }
             }
 
-            return mappedRows;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('.modal-container').classList.remove('scale-95');}, 10);
+        };
+        
+        const hideIssueModal = () => {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-container').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
         };
 
         const handleFileUpload = (event) => {
@@ -443,33 +531,23 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                     if (jsonData && jsonData.length > 0) {
                         issuesData = mapData(jsonData); 
                         refreshUI(); 
                         alert(`${issuesData.length} issues loaded successfully from ${file.name}!`);
                     } else { alert('Could not find any data in the Excel file.'); }
-                } catch (error) {
-                    console.error("Error parsing Excel file:", error);
-                    alert('There was an error parsing the Excel file.');
-                }
+                } catch (error) { console.error("Error parsing file:", error); alert('Error parsing the file.'); }
                 event.target.value = '';
             };
-            reader.onerror = (error) => { console.error("File reading error:", error); alert('Failed to read the file.'); event.target.value = ''; };
             reader.readAsArrayBuffer(file);
         };
 
-        const navigateToIssuesAndFilter = (status) => {
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-all-issues').classList.remove('hidden');
-            document.getElementById('nav-all-issues').classList.add('bg-heineken-green', 'text-white');
-            document.getElementById('nav-dashboard').classList.remove('bg-heineken-green', 'text-white');
-            document.getElementById('filter-status').value = status;
+        const navigateToIssuesAndFilter = (status, system) => {
+            document.getElementById('nav-all-issues').click();
+            document.getElementById('filter-status').value = status || 'all';
+            document.getElementById('filter-system').value = system || 'all';
             processAndRenderTable();
             document.getElementById('view-all-issues').scrollIntoView({ behavior: 'smooth' });
         };
@@ -490,24 +568,23 @@
             document.getElementById('nav-dashboard').addEventListener('click', () => {
                 document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('view-all-issues').classList.add('hidden');
-                document.getElementById('nav-dashboard').classList.add('bg-heineken-green', 'text-white');
-                document.getElementById('nav-all-issues').classList.remove('bg-heineken-green', 'text-white');
             });
             document.getElementById('nav-all-issues').addEventListener('click', () => {
                 document.getElementById('view-dashboard').classList.add('hidden');
                 document.getElementById('view-all-issues').classList.remove('hidden');
-                document.getElementById('nav-all-issues').classList.add('bg-heineken-green', 'text-white');
-                document.getElementById('nav-dashboard').classList.remove('bg-heineken-green', 'text-white');
             });
             fileUploadInput.addEventListener('change', handleFileUpload);
             document.getElementById('filter-status').addEventListener('change', processAndRenderTable);
             document.getElementById('filter-priority').addEventListener('change', processAndRenderTable);
+            document.getElementById('filter-system').addEventListener('change', processAndRenderTable);
             
-            // Click to filter on status cards
             document.getElementById('card-ready-to-test').addEventListener('click', () => navigateToIssuesAndFilter('Ready To Test'));
             document.getElementById('card-testing').addEventListener('click', () => navigateToIssuesAndFilter('Testing'));
             document.getElementById('card-fixing').addEventListener('click', () => navigateToIssuesAndFilter('Fixing'));
             document.getElementById('card-closed').addEventListener('click', () => navigateToIssuesAndFilter('Closed'));
+
+            modalCloseBtn.addEventListener('click', hideIssueModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) hideIssueModal(); });
         };
 
         // --- INITIALIZATION ---
