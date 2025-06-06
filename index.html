@@ -121,12 +121,12 @@
                          <div id="card-fixing-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
                     </div>
                     <!-- Stat Card: Closed -->
-                    <div id="card-closed" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-closed flex flex-col">
+                    <div id="card-closed" class="bg-white rounded-lg shadow-sm p-6 border-t-4 border-status-closed flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300">
                         <h3 class="text-base font-medium text-gray-500 truncate">Closed</h3>
                         <div class="mt-1 flex-grow">
                             <p id="card-closed-count" class="text-5xl font-bold text-status-closed">0</p>
-                             <p class="text-sm text-gray-500">Issues</p>
                         </div>
+                        <div id="card-closed-breakdown" class="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1"></div>
                     </div>
                 </div>
 
@@ -286,7 +286,8 @@
             const statusesToUpdate = [
                 { status: 'Ready To Test', countEl: 'card-ready-to-test-count', breakdownEl: 'card-ready-to-test-breakdown', color: 'heineken-green' },
                 { status: 'Testing', countEl: 'card-testing-count', breakdownEl: 'card-testing-breakdown', color: 'status-testing' },
-                { status: 'Fixing', countEl: 'card-fixing-count', breakdownEl: 'card-fixing-breakdown', color: 'status-fixing' }
+                { status: 'Fixing', countEl: 'card-fixing-count', breakdownEl: 'card-fixing-breakdown', color: 'status-fixing' },
+                { status: 'Closed', countEl: 'card-closed-count', breakdownEl: 'card-closed-breakdown', color: 'status-closed' }
             ];
 
             statusesToUpdate.forEach(({ status, countEl, breakdownEl, color }) => {
@@ -310,8 +311,6 @@
                      breakdownContainer.innerHTML = '<p class="text-gray-400">No issues</p>';
                 }
             });
-            const closedCount = issuesData.filter(i => i.status === 'Closed').length;
-            document.getElementById('card-closed-count').textContent = closedCount;
         };
 
         const updateSystemGlance = () => {
@@ -508,6 +507,7 @@
             document.getElementById('card-ready-to-test').addEventListener('click', () => navigateToIssuesAndFilter('Ready To Test'));
             document.getElementById('card-testing').addEventListener('click', () => navigateToIssuesAndFilter('Testing'));
             document.getElementById('card-fixing').addEventListener('click', () => navigateToIssuesAndFilter('Fixing'));
+            document.getElementById('card-closed').addEventListener('click', () => navigateToIssuesAndFilter('Closed'));
         };
 
         // --- INITIALIZATION ---
