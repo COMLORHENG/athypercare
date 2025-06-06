@@ -55,6 +55,7 @@
                         'priority-p2': '#f59e0b', // Amber 500
                         'priority-p3': '#3b82f6', // Blue 500
                         'priority-p4': '#6b7280', // Gray 500
+                        'status-open': '#8b5cf6', // Violet 500
                         'status-testing': '#3b82f6', // Blue 500
                         'status-closed': '#4b5563',   // Gray 600
                         'status-fixing': '#f59e0b',    // Re-using amber for Fixing
@@ -110,7 +111,7 @@
                 </div>
 
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">Status At a Glance</h2>
-                <div id="status-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div id="status-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
                     <!-- Status cards will be inserted here in the correct order -->
                 </div>
 
@@ -128,6 +129,21 @@
                      <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by System</h2>
                      <div id="system-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
                 </div>
+                
+                 <div class="mt-12">
+                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by Impacted Distributor</h2>
+                     <div id="distributor-glance-container" class="bg-white rounded-lg shadow-sm p-4 space-y-3"></div>
+                </div>
+
+                <div class="mt-12">
+                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Top Ticket Reporters</h2>
+                     <div id="reporter-glance-container" class="bg-white rounded-lg shadow-sm p-4 space-y-3"></div>
+                </div>
+
+                <div class="mt-12">
+                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Workload by Assignee</h2>
+                     <div id="assignee-glance-container" class="bg-white rounded-lg shadow-sm p-4 space-y-4"></div>
+                </div>
             </div>
 
             <div id="view-all-issues" class="hidden">
@@ -136,6 +152,7 @@
                     <div class="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
                          <select id="filter-status" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
                              <option value="all">All Statuses</option>
+                             <option value="Open">Open</option>
                              <option value="Pending">Pending</option>
                              <option value="Ready To Test">Ready To Test</option>
                              <option value="Testing">Testing</option>
@@ -151,6 +168,15 @@
                          </select>
                           <select id="filter-department" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
                             <option value="all">All Departments</option>
+                         </select>
+                         <select id="filter-distributor" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                            <option value="all">All Distributors</option>
+                         </select>
+                          <select id="filter-assignee" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                            <option value="all">All Assignees</option>
+                         </select>
+                           <select id="filter-reporter" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
+                            <option value="all">All Reporters</option>
                          </select>
                     </div>
                  </div>
@@ -201,6 +227,9 @@
             updatePriorityGlance();
             updateDepartmentGlance();
             updateSystemGlance();
+            updateReporterGlance();
+            updateAssigneeGlance();
+            updateDistributorGlance();
             populateFilters();
             renderTableHeader();
             processAndRenderTable();
@@ -213,7 +242,8 @@
             const valueStr = String(value || '').toLowerCase();
 
             if (type === 'status') {
-                if (valueStr.includes('pending')) colorClasses = 'bg-status-pending text-white';
+                if (valueStr.includes('open')) colorClasses = 'bg-status-open text-white';
+                else if (valueStr.includes('pending')) colorClasses = 'bg-status-pending text-white';
                 else if (valueStr.includes('ready')) colorClasses = 'bg-heineken-green text-white';
                 else if (valueStr.includes('closed')) colorClasses = 'bg-status-closed text-white';
                 else if (valueStr.includes('fixing')) colorClasses = 'bg-status-fixing text-white';
@@ -277,7 +307,8 @@
             const container = document.getElementById('status-glance-container');
             container.innerHTML = ''; // Clear existing cards first
 
-            const statusesInOrder = ['Ready To Test', 'Fixing', 'Testing', 'Pending', 'Closed'];
+            const statusesInOrder = ['Open', 'Ready To Test', 'Fixing', 'Testing', 'Pending', 'Closed'];
+            const statusEmojis = {'Open': '📂', 'Ready To Test': '✅', 'Fixing': '🛠️', 'Testing': '🔬', 'Pending': '⏳', 'Closed': '🏁'};
 
             statusesInOrder.forEach(status => {
                 const filteredIssues = issuesData.filter(i => i.status === status);
@@ -289,7 +320,8 @@
                 }, {});
 
                 let color = 'gray-500';
-                if (status === 'Ready To Test') color = 'heineken-green';
+                if (status === 'Open') color = 'status-open';
+                else if (status === 'Ready To Test') color = 'heineken-green';
                 else if (status === 'Fixing') color = 'status-fixing';
                 else if (status === 'Testing') color = 'status-testing';
                 else if (status === 'Pending') color = 'status-pending';
@@ -297,7 +329,7 @@
 
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-lg shadow-sm p-6 border-t-4 border-${color} flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300`;
-                card.addEventListener('click', () => navigateToIssuesAndFilter(status));
+                card.addEventListener('click', () => navigateToIssuesAndFilter({ status: status }));
                 
                 const breakdownContainer = document.createElement('div');
                 breakdownContainer.className = 'text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1';
@@ -317,7 +349,7 @@
                 }
 
                 card.innerHTML = `
-                    <h3 class="text-base font-medium text-gray-500 truncate">${status}</h3>
+                    <h3 class="text-base font-medium text-gray-500 truncate">${statusEmojis[status] || ''} ${status}</h3>
                     <div class="mt-1 flex-grow"><p class="text-5xl font-bold text-${color}">${total}</p></div>
                 `;
                 card.appendChild(breakdownContainer);
@@ -344,6 +376,7 @@
             const colors = ['border-blue-500', 'border-purple-500', 'border-pink-500', 'border-teal-500', 'border-orange-500'];
             const emojis = ['🏢', '💼', '📈', '💻', '📊', '📞', '🧑‍💻', '🛒'];
             let hash = 0;
+            if (!deptName) return { color: 'border-gray-400', emoji: '❔' };
             for (let i = 0; i < deptName.length; i++) hash = deptName.charCodeAt(i) + ((hash << 5) - hash);
             return { color: colors[Math.abs(hash) % colors.length], emoji: emojis[Math.abs(hash) % emojis.length] };
         };
@@ -360,6 +393,7 @@
                 
                 const statusBreakdown = issues.reduce((acc, issue) => { acc[issue.status] = (acc[issue.status] || 0) + 1; return acc; }, {});
                 let breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${statusBreakdown['Open'] || 0}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${statusBreakdown['Pending'] || 0}</span></div>
                     <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${statusBreakdown['Ready To Test'] || 0}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${statusBreakdown['Testing'] || 0}</span></div>
@@ -383,8 +417,7 @@
                 });
                 breakdownHTML += deptWrapper.outerHTML;
 
-
-                container.appendChild(createGlanceCard(priority, total, color, breakdownHTML, () => navigateToIssuesAndFilter(undefined, undefined, priority)));
+                container.appendChild(createGlanceCard(priority, total, color, breakdownHTML, () => navigateToIssuesAndFilter({ priority: priority })));
             }
         };
         
@@ -393,7 +426,7 @@
             container.innerHTML = '';
             const deptData = issuesData.reduce((acc, issue) => {
                 const dept = issue.department || 'Unassigned';
-                if (!acc[dept]) acc[dept] = { 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
+                if (!acc[dept]) acc[dept] = { 'Open': 0, 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
                 if (acc[dept][issue.status] !== undefined) acc[dept][issue.status]++;
                 acc[dept].total++;
                 return acc;
@@ -407,13 +440,14 @@
                  const data = deptData[dept];
                  const { color, emoji } = getDeptVisuals(dept);
                  const breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${data['Open']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
                     <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
                 `;
-                container.appendChild(createGlanceCard(dept, data.total, color, breakdownHTML, () => navigateToIssuesAndFilter(undefined, undefined, undefined, dept), emoji));
+                container.appendChild(createGlanceCard(dept, data.total, color, breakdownHTML, () => navigateToIssuesAndFilter({ department: dept }), emoji));
             }
         };
 
@@ -422,7 +456,7 @@
             container.innerHTML = '';
             const systemData = issuesData.reduce((acc, issue) => {
                 const system = issue.system || 'Unassigned';
-                if (!acc[system]) acc[system] = { 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
+                if (!acc[system]) acc[system] = { 'Open': 0, 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
                 if (acc[system][issue.status] !== undefined) acc[system][issue.status]++;
                 acc[system].total++;
                 return acc;
@@ -435,24 +469,127 @@
             for (const system in systemData) {
                  const data = systemData[system];
                  const breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${data['Open']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
                     <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
                     <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
                 `;
-                 container.appendChild(createGlanceCard(system, data.total, 'border-heineken-green', breakdownHTML, () => navigateToIssuesAndFilter(undefined, system)));
+                 container.appendChild(createGlanceCard(system, data.total, 'border-heineken-green', breakdownHTML, () => navigateToIssuesAndFilter({ system: system })));
             }
         };
         
+        const updateReporterGlance = () => {
+            const container = document.getElementById('reporter-glance-container');
+            container.innerHTML = '';
+            const reporterData = issuesData.reduce((acc, issue) => {
+                const reporter = issue.createdBy || 'Unassigned';
+                acc[reporter] = (acc[reporter] || 0) + 1;
+                return acc;
+            }, {});
+
+            const sortedReporters = Object.entries(reporterData).sort((a,b) => b[1] - a[1]);
+
+            if(sortedReporters.length === 0) {
+                 container.innerHTML = `<div class="text-gray-500">No reporters found.</div>`; return;
+            }
+
+            sortedReporters.forEach(([name, total]) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2 hover:bg-gray-100 rounded-md cursor-pointer';
+                item.addEventListener('click', () => navigateToIssuesAndFilter({ reporter: name }));
+                item.innerHTML = `
+                    <span class="text-sm font-medium text-gray-700">🙋 ${name}</span>
+                    <span class="text-lg font-bold text-gray-800">${total}</span>
+                `;
+                container.appendChild(item);
+            });
+        };
+
+        const updateAssigneeGlance = () => {
+            const container = document.getElementById('assignee-glance-container');
+            container.innerHTML = '';
+            const assigneeData = issuesData.reduce((acc, issue) => {
+                const assignee = issue.assignTo || 'Unassigned';
+                if (!acc[assignee]) acc[assignee] = { 'Open': 0, 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
+                if (acc[assignee][issue.status] !== undefined) acc[assignee][issue.status]++;
+                acc[assignee].total++;
+                return acc;
+            }, {});
+            
+            const sortedAssignees = Object.entries(assigneeData).sort((a, b) => b[1].total - a[1].total);
+
+            if(sortedAssignees.length === 0) {
+                 container.innerHTML = `<div class="text-gray-500">No assignees found.</div>`; return;
+            }
+            
+            sortedAssignees.forEach(([name, data]) => {
+                const breakdownHTML = `
+                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${data['Open']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
+                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
+                `;
+                const item = document.createElement('div');
+                item.className = 'p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-purple-500';
+                item.addEventListener('click', () => navigateToIssuesAndFilter({ assignee: name }));
+                item.innerHTML = `
+                    <div class="flex justify-between items-baseline">
+                         <h5 class="font-semibold text-gray-800">🧑‍💻 ${name}</h5>
+                         <span class="text-2xl font-bold text-gray-800">${data.total}</span>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-gray-100 space-y-1">${breakdownHTML}</div>
+                `;
+                container.appendChild(item);
+            });
+        };
+
+        const updateDistributorGlance = () => {
+            const container = document.getElementById('distributor-glance-container');
+            container.innerHTML = '';
+            const distributorData = issuesData.reduce((acc, issue) => {
+                const distributors = String(issue.impactedDistributor || '').split(',').map(d => d.trim()).filter(Boolean);
+                distributors.forEach(distributor => {
+                    acc[distributor] = (acc[distributor] || 0) + 1;
+                });
+                return acc;
+            }, {});
+            
+            const sortedDistributors = Object.entries(distributorData).sort((a,b) => b[1] - a[1]);
+            
+            if (sortedDistributors.length === 0) {
+                 container.innerHTML = `<div class="text-gray-500">No distributors found.</div>`; return;
+            }
+
+            sortedDistributors.forEach(([distributor, total]) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2 hover:bg-gray-100 rounded-md cursor-pointer';
+                item.addEventListener('click', () => navigateToIssuesAndFilter({ distributor: distributor }));
+                item.innerHTML = `
+                    <span class="text-sm font-medium text-gray-700">🚚 ${distributor}</span>
+                    <span class="text-lg font-bold text-gray-800">${total}</span>
+                `;
+                container.appendChild(item);
+            });
+        };
+        
         const populateFilters = () => {
-            const populate = (filterEl, key) => {
+            const populate = (filterEl, key, isMulti = false) => {
                 const currentVal = filterEl.value;
                 const options = filterEl.querySelectorAll('option:not([value="all"])');
                 options.forEach(o => o.remove());
                 let items;
                 if (key === 'priority') {
-                    items = ['P1', 'P2', 'P3', 'P4']; // Fixed list for priority
+                    items = ['P1', 'P2', 'P3', 'P4']; 
+                } else if (isMulti) {
+                    const allItems = new Set();
+                    issuesData.forEach(i => {
+                        String(i[key] || '').split(',').map(item => item.trim()).filter(Boolean).forEach(item => allItems.add(item));
+                    });
+                    items = [...allItems].sort((a,b) => a.localeCompare(b));
                 } else {
                     items = [...new Set(issuesData.map(i => i[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b));
                 }
@@ -471,20 +608,31 @@
             };
             populate(document.getElementById('filter-system'), 'system');
             populate(document.getElementById('filter-department'), 'department');
+            populate(document.getElementById('filter-assignee'), 'assignTo');
+            populate(document.getElementById('filter-reporter'), 'createdBy');
+            populate(document.getElementById('filter-distributor'), 'impactedDistributor', true);
         };
 
         const processAndRenderTable = () => {
-            const filterStatus = document.getElementById('filter-status').value;
-            const filterPriority = document.getElementById('filter-priority').value;
-            const filterSystem = document.getElementById('filter-system').value;
-            const filterDept = document.getElementById('filter-department').value;
+            const filters = {
+                status: document.getElementById('filter-status').value,
+                priority: document.getElementById('filter-priority').value,
+                system: document.getElementById('filter-system').value,
+                department: document.getElementById('filter-department').value,
+                assignTo: document.getElementById('filter-assignee').value,
+                createdBy: document.getElementById('filter-reporter').value,
+                distributor: document.getElementById('filter-distributor').value,
+            };
             
             let processedData = issuesData.filter(issue => {
-                const statusMatch = filterStatus === 'all' || issue.status === filterStatus;
-                const priorityMatch = filterPriority === 'all' || String(issue.priority).toUpperCase() === filterPriority;
-                const systemMatch = filterSystem === 'all' || issue.system === filterSystem;
-                const deptMatch = filterDept === 'all' || issue.department === filterDept;
-                return statusMatch && priorityMatch && systemMatch && deptMatch;
+                const statusMatch = filters.status === 'all' || issue.status === filters.status;
+                const priorityMatch = filters.priority === 'all' || String(issue.priority).toUpperCase() === filters.priority;
+                const systemMatch = filters.system === 'all' || issue.system === filters.system;
+                const deptMatch = filters.department === 'all' || issue.department === filters.department;
+                const assigneeMatch = filters.assignTo === 'all' || issue.assignTo === filters.assignTo;
+                const reporterMatch = filters.createdBy === 'all' || issue.createdBy === filters.createdBy;
+                const distributorMatch = filters.distributor === 'all' || String(issue.impactedDistributor || '').split(',').map(d => d.trim()).includes(filters.distributor);
+                return statusMatch && priorityMatch && systemMatch && deptMatch && assigneeMatch && reporterMatch && distributorMatch;
             });
             processedData.sort((a, b) => {
                 const valA = a[currentSort.key]; const valB = b[currentSort.key];
@@ -510,12 +658,13 @@
         
        const mapData = (jsonData) => {
             if (!jsonData || jsonData.length === 0) return [];
-            const standardOrder = ['id', 'status', 'summary', 'system', 'priority', 'department', 'assignTo', 'createdDate', 'description'];
+            const standardOrder = ['id', 'status', 'summary', 'system', 'priority', 'department', 'assignTo', 'createdBy', 'createdDate', 'impactedDistributor', 'description'];
             const mapping = {
                 id: ['id'], status: ['status'], summary: ['summary', 'title'], system: ['system'],
                 priority: ['priority'], assignTo: ['assignto', 'assign to', 'assigned to'],
+                createdBy: ['createdby', 'created by', 'reporter'],
                 createdDate: ['createddate', 'created date', 'date'], description: ['description'],
-                department: ['department', 'dept']
+                department: ['department', 'dept'], impactedDistributor: ['impacteddistributor', 'impacted distributor']
             };
 
             const mappedData = jsonData.map(row => {
@@ -559,13 +708,14 @@
                 return item;
             };
             
-            const standardDetailKeys = new Set(['status', 'priority', 'system', 'assignTo', 'createdDate', 'department']);
+            const standardDetailKeys = new Set(['status', 'priority', 'system', 'assignTo', 'createdDate', 'department', 'createdBy']);
             
             detailsPanel.appendChild(createDetailItem('Status', issue.status, true, 'status'));
             detailsPanel.appendChild(createDetailItem('Priority', issue.priority, true, 'priority'));
             detailsPanel.appendChild(createDetailItem('System', issue.system));
             detailsPanel.appendChild(createDetailItem('Department', issue.department));
             detailsPanel.appendChild(createDetailItem('Assignee', issue.assignTo));
+            detailsPanel.appendChild(createDetailItem('Reporter', issue.createdBy));
             detailsPanel.appendChild(createDetailItem('Created Date', issue.createdDate));
 
             let hasMainContent = false;
@@ -606,12 +756,15 @@
             reader.readAsArrayBuffer(file);
         };
 
-        const navigateToIssuesAndFilter = (status, system, priority, department) => {
+        const navigateToIssuesAndFilter = (filters) => {
             document.getElementById('nav-all-issues').click();
-            document.getElementById('filter-status').value = status || 'all';
-            document.getElementById('filter-system').value = system || 'all';
-            document.getElementById('filter-priority').value = priority || 'all';
-            document.getElementById('filter-department').value = department || 'all';
+            document.getElementById('filter-status').value = filters.status || 'all';
+            document.getElementById('filter-system').value = filters.system || 'all';
+            document.getElementById('filter-priority').value = filters.priority || 'all';
+            document.getElementById('filter-department').value = filters.department || 'all';
+            document.getElementById('filter-assignee').value = filters.assignee || 'all';
+            document.getElementById('filter-reporter').value = filters.reporter || 'all';
+            document.getElementById('filter-distributor').value = filters.distributor || 'all';
             processAndRenderTable();
             document.getElementById('view-all-issues').scrollIntoView({ behavior: 'smooth' });
         };
@@ -634,11 +787,10 @@
                 document.getElementById('view-all-issues').classList.remove('hidden');
             });
             fileUploadInput.addEventListener('change', handleFileUpload);
-            ['filter-status', 'filter-priority', 'filter-system', 'filter-department'].forEach(id => {
+            ['filter-status', 'filter-priority', 'filter-system', 'filter-department', 'filter-assignee', 'filter-reporter', 'filter-distributor'].forEach(id => {
                 document.getElementById(id).addEventListener('change', processAndRenderTable);
             });
             
-            // Event listeners for status cards are attached dynamically in updateDashboardStats
             modalCloseBtn.addEventListener('click', hideIssueModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) hideIssueModal(); });
         };
