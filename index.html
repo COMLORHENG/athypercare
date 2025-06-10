@@ -6,6 +6,8 @@
     <title>Issue Tracker Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -27,13 +29,13 @@
 </head>
 <body class="bg-gray-50">
 
-    <div class="container mx-auto p-4 md:p-8">
+    <div id="dashboard-content" class="container mx-auto p-4 md:p-8">
 
-        <!-- Sticky Header -->
-        <header id="sticky-header" class="sticky top-4 z-50 bg-white/80 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-gray-200/50 mb-8">
+        <!-- Header -->
+        <header id="main-header" class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-gray-200/50">
             <div class="flex flex-col">
-                <h1 class="text-xl font-bold text-gray-800 mb-3 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
-                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200/80 pt-3">
+                <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
+                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200/80 pt-4">
                     <div class="flex items-center gap-4 flex-shrink-0">
                          <p class="text-gray-500 text-sm font-medium">Total Issues</p>
                          <p id="total-issues" class="text-3xl font-bold text-gray-800">0</p>
@@ -42,7 +44,7 @@
                         <!-- Badges for total issues will be inserted here by JS -->
                     </div>
                 </div>
-                <div id="timestamp-container" class="w-full text-right text-xs text-gray-400 mt-3">
+                <div id="timestamp-container" class="w-full text-right text-xs text-gray-400 mt-4">
                     <!-- Timestamp will be inserted here by JS -->
                 </div>
             </div>
@@ -92,48 +94,51 @@
     
             <!-- Divider -->
             <hr class="my-12 border-gray-200">
-    
-            <!-- Issues by Distributor Section -->
-            <section id="distributor-summary" class="mb-12">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Distributors</h2>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div id="distributor-chart-container" class="relative overflow-x-auto"></div>
-                    <div id="distributor-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
-                </div>
-            </section>
             
-            <!-- Divider -->
-            <hr class="my-12 border-gray-200">
-    
-            <!-- Issue Reporter Section -->
-            <section id="reporter-summary" class="mb-12">
-                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Issue Reporter</h2>
-                 <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div id="reporter-chart-container" class="flex flex-col md:flex-row items-center justify-center gap-8">
-                        <!-- Donut chart and legend will be rendered here -->
+            <!-- Combined Charts Section -->
+            <section id="combined-charts-summary" class="mb-12">
+                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Visual Analysis</h2>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <!-- Issue Reporter Section -->
+                    <div class="xl:col-span-1">
+                        <div class="bg-white p-6 rounded-xl shadow-md h-full">
+                            <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Issue Reporter</h3>
+                            <div id="reporter-chart-container" class="flex flex-col items-center justify-center gap-8">
+                                <!-- Donut chart and legend will be rendered here -->
+                            </div>
+                         </div>
                     </div>
-                 </div>
-            </section>
-    
-            <!-- Divider -->
-            <hr class="my-12 border-gray-200">
-            
-            <!-- Tickets by Date Section -->
-            <section id="tickets-by-date-summary">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Tickets by Date</h2>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div id="tickets-by-date-chart-container" class="relative"></div>
-                    <div id="tickets-by-date-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                    <!-- Tickets by Date Section -->
+                    <div class="xl:col-span-1">
+                        <div class="bg-white p-6 rounded-xl shadow-md h-full">
+                            <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Tickets by Date</h3>
+                            <div id="tickets-by-date-chart-container" class="relative"></div>
+                            <div id="tickets-by-date-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                        </div>
+                    </div>
+                     <!-- Issues by Distributor Section -->
+                     <div class="xl:col-span-1">
+                         <div class="bg-white p-6 rounded-xl shadow-md h-full">
+                            <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Distributors</h3>
+                            <div id="distributor-chart-container" class="relative overflow-x-auto"></div>
+                            <div id="distributor-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
-            
-             <!-- Upload CSV Button Section -->
+
+             <!-- Upload/Download Buttons Section -->
             <section class="text-center py-8">
                 <label for="csv-upload" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg cursor-pointer hover:bg-blue-700 transition-transform transform hover:scale-105 inline-flex items-center gap-2">
                     <i class="fa-solid fa-upload"></i>
                     <span>Upload New CSV Data</span>
                 </label>
                 <input type="file" id="csv-upload" class="hidden" accept=".csv">
+                
+                <button id="generate-pdf-btn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg cursor-pointer hover:bg-green-700 transition-transform transform hover:scale-105 inline-flex items-center gap-2 ml-4">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Generate PDF</span>
+                </button>
                 <p class="text-xs text-gray-500 mt-3">Uploading a new file will refresh all dashboard visualizations.</p>
             </section>
         </main>
@@ -763,8 +768,7 @@
                 const height = 400 - margin.top - margin.bottom;
 
                 const svg = container.append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
+                    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
                     .append("g")
                     .attr("transform", `translate(${margin.left},${margin.top})`);
                 
@@ -893,6 +897,35 @@
                     reader.onerror = () => alert("Error reading the file.");
                     reader.readAsText(file);
                 }
+            });
+
+            document.getElementById('generate-pdf-btn').addEventListener('click', () => {
+                const { jsPDF } = window.jspdf;
+                const content = document.getElementById('dashboard-content');
+                
+                html2canvas(content, { scale: 2, windowWidth: content.scrollWidth, windowHeight: content.scrollHeight }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    const canvasWidth = canvas.width;
+                    const canvasHeight = canvas.height;
+                    const ratio = canvasHeight / canvasWidth;
+                    let imgHeight = pdfWidth * ratio;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                        heightLeft -= pdfHeight;
+                    }
+                    pdf.save('dashboard-report.pdf');
+                });
             });
         });
     </script>
