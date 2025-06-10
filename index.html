@@ -3,803 +3,898 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HEINEKEN | Post Go-Live Issue Tracker</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Issue Tracker Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- SheetJS Library for reading Excel files -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-    <!-- Custom Styles & Tailwind Config -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* Light grey background */
         }
-        /* Simple scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #009a44;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #007a36;
-        }
-        /* Styles for the modal */
-        .modal-overlay {
-            transition: opacity 0.3s ease;
-        }
-        .modal-container {
-            transition: transform 0.3s ease;
+        .chart-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'heineken-green': '#009a44',
-                        'heineken-green-dark': '#007a36',
-                        'heineken-red': '#e21a23',
-                        'priority-p2': '#f59e0b', // Amber 500
-                        'priority-p3': '#3b82f6', // Blue 500
-                        'priority-p4': '#6b7280', // Gray 500
-                        'status-open': '#8b5cf6', // Violet 500
-                        'status-testing': '#3b82f6', // Blue 500
-                        'status-closed': '#4b5563',   // Gray 600
-                        'status-fixing': '#f59e0b',    // Re-using amber for Fixing
-                        'status-pending': '#6366f1',  // Indigo 500
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="antialiased text-gray-800">
+<body class="bg-gray-50">
 
-    <div id="app" class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-md sticky top-0 z-20">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
-                    <!-- Logo and Title -->
-                    <div class="flex items-center space-x-4">
-                        <svg class="h-8 w-auto" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"	 viewBox="0 0 150 36" style="enable-background:new 0 0 150 36;" xml:space="preserve"><style type="text/css">	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#005127;}	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#D8232A;}</style><g>	<path class="st0" d="M150,16.4v0.7c0,0-0.8,0.3-0.8,1.3l0,15.8c0,0.6-0.5,1-1,1h-3.1l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4		h2.5c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C145.4,16.4,150,16.4,150,16.4z M77.2,16.4v17.8c0,0.6-0.5,1-1,1H73		l-6.8-10.8c0,0,0.1,0.9,0.1,2v8.8h-3.8V16.4H65c1.3,0,2.2,0.5,2.8,1.5l5.7,9c0,0-0.2-0.6-0.2-2v-8.5C73.4,16.4,77.2,16.4,77.2,16.4		z M30.2,16.4h-5.1v7.2h-4.4v-7.2h-5.9v0.7c0,0,0.8,0.3,0.8,1.3v16.8h5.1v-8.1h4.4v8.1h5.1L30.2,16.4L30.2,16.4z M46.7,16.4H35.4		v17.1c0,1,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4		C47.7,16.9,47.2,16.4,46.7,16.4z M57.4,16.4h-5.1v17.8c0,0.6,0.5,1,1,1h4.1V16.4L57.4,16.4z M129.3,16.4H118v17.1		c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4H123v-3.8h7.2v-2.4		C130.3,16.9,129.8,16.4,129.3,16.4z M93.6,16.4H82.3v17.1c0,0.9,0.9,1.7,1.9,1.7h9.4c0.6,0,1-0.5,1-1v-2.4h-6.5		c-0.4,0-0.8-0.3-0.8-0.8v-4h5.8v-3.4h-5.8v-3.8h7.2v-2.4C94.6,16.9,94.1,16.4,93.6,16.4L93.6,16.4z M115,16.4h-3.7		c-0.9,0-1.6,0.2-2.3,1l-5.2,5.9v-7h-5.1v17.8c0,0.6,0.5,1,1,1h4.1v-8.5l4.5,7c0.7,1,1.3,1.6,2.9,1.6h4.2l-7.1-11.1L115,16.4		L115,16.4z"/>	<path class="st1" d="M5,23.4c-0.1,0.1-0.3,0.1-0.4-0.1c-0.1-0.1-0.1-0.2,0-0.3c0.1-0.4,2.7-8.5,2.7-8.5L0.1,9.3		C-0.1,9.1,0,8.7,0.3,8.7c0.4,0,8.8,0,8.8,0s2.6-8.1,2.7-8.5C11.9,0.1,12,0,12.2,0c0.1,0,0.2,0.1,0.2,0.2c0.1,0.4,2.7,8.5,2.7,8.5		s8.3,0,8.8,0c0.3,0,0.4,0.4,0.2,0.6l-4.2,3.1h-5l-1.5-4.8l-1.5,4.8h-5l4.1,3l-1.5,4.8L5,23.4"/></g></svg>
-                        <div>
-                            <span class="text-xl font-semibold text-gray-700 hidden sm:block">Post AT Go-live & Hypercare Issue Tracker</span>
-                             <p id="report-timestamp" class="text-xs text-gray-500"></p>
-                        </div>
+    <div class="container mx-auto p-4 md:p-8">
+
+        <!-- Sticky Header -->
+        <header id="sticky-header" class="sticky top-4 z-50 bg-white/80 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-gray-200/50 mb-8">
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold text-gray-800 mb-3 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
+                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200/80 pt-3">
+                    <div class="flex items-center gap-4 flex-shrink-0">
+                         <p class="text-gray-500 text-sm font-medium">Total Issues</p>
+                         <p id="total-issues" class="text-3xl font-bold text-gray-800">0</p>
                     </div>
-                    <div class="flex items-center space-x-6">
-                        <nav class="flex items-center space-x-2 sm:space-x-4">
-                            <button id="nav-dashboard" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-white bg-heineken-green">Dashboard</button>
-                            <button id="nav-all-issues" class="px-3 py-2 text-sm sm:text-base font-medium rounded-md text-gray-600 hover:bg-gray-200 hover:text-gray-900">All Issues</button>
-                        </nav>
+                    <div id="system-badges-container" class="flex flex-wrap gap-2 justify-center sm:justify-end flex-grow">
+                        <!-- Badges for total issues will be inserted here by JS -->
                     </div>
+                </div>
+                <div id="timestamp-container" class="w-full text-right text-xs text-gray-400 mt-3">
+                    <!-- Timestamp will be inserted here by JS -->
                 </div>
             </div>
         </header>
 
-        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <main>
+            <!-- Issues by Status Section -->
+            <section id="status-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Status Summary</h2>
+                <div id="status-cards-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                   <!-- Status cards will be dynamically inserted here -->
+                </div>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issues by Department Section -->
+            <section id="department-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Department Summary</h2>
+                <div id="department-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Department cards will be dynamically inserted here -->
+                </div>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issues by Priority Section -->
+            <section id="priority-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Priority</h2>
+                <div id="priority-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Priority cards will be dynamically inserted here -->
+                </div>
+            </section>
             
-            <div id="view-dashboard">
-                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-                    <div class="flex items-baseline space-x-4">
-                        <h2 class="text-2xl font-bold text-gray-900">Total Issues Raised:</h2>
-                        <p id="header-total-issues-count" class="text-4xl font-bold text-gray-800">0</p>
-                    </div>
-                    <div class="mt-4 sm:mt-0">
-                         <label for="file-upload" class="cursor-pointer inline-flex items-center px-4 py-2 border border-heineken-green text-heineken-green text-sm font-medium rounded-md bg-white hover:bg-green-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            Upload Excel
-                         </label>
-                         <input id="file-upload" type="file" class="hidden" accept=".xlsx, .xls, .csv">
-                    </div>
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issues by System Section -->
+            <section id="system-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">System</h2>
+                <div id="system-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- System cards will be dynamically inserted here -->
                 </div>
-
-                <h2 class="text-2xl font-bold text-gray-900 mb-4">Status At a Glance</h2>
-                <div id="status-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
-                    <!-- Status cards will be inserted here in the correct order -->
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issues by Distributor Section -->
+            <section id="distributor-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Distributors</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div id="distributor-chart-container" class="relative overflow-x-auto"></div>
+                    <div id="distributor-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
                 </div>
-
-                <div class="mt-12">
-                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by Department</h2>
-                     <div id="department-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                </div>
-
-                <div class="mt-12">
-                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by Priority</h2>
-                     <div id="priority-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                </div>
-
-                <div class="mt-12">
-                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by System</h2>
-                     <div id="system-glance-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                </div>
-                
-                 <div class="mt-12">
-                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Issues by Impacted Distributor</h2>
-                     <div id="distributor-glance-container" class="bg-white rounded-lg shadow-sm p-4 space-y-3"></div>
-                </div>
-
-                <div class="mt-12">
-                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Top Ticket Reporters</h2>
-                     <div id="reporter-glance-container" class="bg-white rounded-lg shadow-sm p-4 space-y-3"></div>
-                </div>
-
-                <div class="mt-12">
-                     <h2 class="text-2xl font-bold text-gray-900 mb-4">Workload by Assignee</h2>
-                     <div id="assignee-glance-container" class="bg-white rounded-lg shadow-sm p-4 space-y-4"></div>
-                </div>
-            </div>
-
-            <div id="view-all-issues" class="hidden">
-                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                    <h1 class="text-3xl font-bold text-gray-900">All Issues</h1>
-                    <div class="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
-                         <select id="filter-status" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                             <option value="all">All Statuses</option>
-                             <option value="Open">Open</option>
-                             <option value="Pending">Pending</option>
-                             <option value="Ready To Test">Ready To Test</option>
-                             <option value="Testing">Testing</option>
-                             <option value="Fixing">Fixing</option>
-                             <option value="Closed">Closed</option>
-                         </select>
-                         <select id="filter-priority" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                             <option value="all">All Priorities</option>
-                             <option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option><option value="P4">P4</option>
-                         </select>
-                         <select id="filter-system" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                            <option value="all">All Systems</option>
-                         </select>
-                          <select id="filter-department" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                            <option value="all">All Departments</option>
-                         </select>
-                         <select id="filter-distributor" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                            <option value="all">All Distributors</option>
-                         </select>
-                          <select id="filter-assignee" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                            <option value="all">All Assignees</option>
-                         </select>
-                           <select id="filter-reporter" class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-heineken-green focus:border-transparent">
-                            <option value="all">All Reporters</option>
-                         </select>
+            </section>
+            
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issue Reporter Section -->
+            <section id="reporter-summary" class="mb-12">
+                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Issue Reporter</h2>
+                 <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div id="reporter-chart-container" class="flex flex-col md:flex-row items-center justify-center gap-8">
+                        <!-- Donut chart and legend will be rendered here -->
                     </div>
                  </div>
-                
-                <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead id="issues-table-head" class="bg-gray-50"></thead>
-                        <tbody id="issues-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+            
+            <!-- Tickets by Date Section -->
+            <section id="tickets-by-date-summary">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Tickets by Date</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div id="tickets-by-date-chart-container" class="relative"></div>
+                    <div id="tickets-by-date-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
                 </div>
-            </div>
+            </section>
+            
+             <!-- Upload CSV Button Section -->
+            <section class="text-center py-8">
+                <label for="csv-upload" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg cursor-pointer hover:bg-blue-700 transition-transform transform hover:scale-105 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload New CSV Data</span>
+                </label>
+                <input type="file" id="csv-upload" class="hidden" accept=".csv">
+                <p class="text-xs text-gray-500 mt-3">Uploading a new file will refresh all dashboard visualizations.</p>
+            </section>
         </main>
-        
-        <footer class="text-center py-4 text-sm text-gray-500 mt-8">
-            <p>&copy; 2025 The HEINEKEN Company. All Rights Reserved.</p>
-            <p id="last-updated" class="mt-1"></p>
-        </footer>
-
-        <div id="issue-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
-            <div class="modal-container bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95">
-                <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                    <h2 id="modal-title" class="text-lg font-semibold text-gray-800"></h2>
-                    <button id="modal-close-btn" class="text-gray-400 hover:text-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-                <div class="flex-grow p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div id="modal-main-content" class="md:col-span-2"></div>
-                    <div class="md:col-span-1 space-y-4"><div id="modal-details-panel"></div></div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
-        // --- DATA SOURCE & STATE ---
-        let issuesData = [];
-        let tableHeaders = [];
-        let currentSort = { key: 'id', direction: 'asc' };
-        
-        const fileUploadInput = document.getElementById('file-upload');
-        const modal = document.getElementById('issue-modal');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        
-        const refreshUI = () => {
-            updateHeaderAndTotalIssues();
-            updateDashboardStats();
-            updatePriorityGlance();
-            updateDepartmentGlance();
-            updateSystemGlance();
-            updateReporterGlance();
-            updateAssigneeGlance();
-            updateDistributorGlance();
-            populateFilters();
-            renderTableHeader();
-            processAndRenderTable();
-            updateTimestamp();
-        };
+        let issueData = [
+            { "ID": 12, "Status": "Testing", "Summary": "Data from Power BI vs Print Invoice of JDE system show different", "System": "Power BI", "Description": "Different Unit Price, Discount %, Discount Amount. \n\nNeed Clarify with JDE team to support on this", "Assign To": "Dana Chhun", "Department": "Tax", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "Created By": "Virak Prom", "CreatedDate": "6/4/2025 12:51 PM", "Modified": "6/6/2025 12:04 PM", "Modified By": "Dana Chhun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": "Danish Kokkarani" },
+            { "ID": 19, "Status": "Testing", "Summary": "missing data of one distributor ( Everflow )", "System": "Power BI", "Description": "it’s missing data of one distributor ( Everflow ). Due to need enable configuration at backend Data Prime to pull data from BC system.", "Assign To": "Virak Prom", "Department": "OtC", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "Created By": "Virak Prom", "CreatedDate": "6/6/2025 6:44 AM", "Modified": "6/6/2025 11:14 AM", "Modified By": "Virak Prom", "Did we test in UAT?": "Yes", "Impacted Distributor": "EVERFLOW DISTRIBUTOR CO., LTD.", "Support PIC": "Kinneth Chhorn" },
+            { "ID": 20, "Status": "Testing", "Summary": "HCAM - Distributor Payment report", "System": "Power BI", "Description": "It need verify and confirm from Owner report", "Assign To": "Sophal Srun", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Virak Prom", "CreatedDate": "6/6/2025 8:29 AM", "Modified": "6/6/2025 8:59 AM", "Modified By": "Virak Prom", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": "Pichleakhena Moul" },
+            { "ID": 21, "Status": "Testing", "Summary": "HCAM - DIS BI report", "System": "Power BI", "Description": "It need verify and confirm OTC related DIS data from new model", "Assign To": "Sophal Srun", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Virak Prom", "CreatedDate": "6/6/2025 8:33 AM", "Modified": "6/6/2025 8:58 AM", "Modified By": "Virak Prom", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 13, "Status": "Ready To Test", "Summary": "gR in  \" order list view \" not extract excel ", "System": "glassRUN", "Description": "Dear Team, \n\ncurrently, gR in the module \" Order List View \" does not function to extract Excel.\nplease check the attached.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Reaksa Ban", "CreatedDate": "6/5/2025 10:36 AM", "Modified": "6/6/2025 6:16 AM", "Modified By": "Kimleang Ngoun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 1, "Status": "Closed", "Summary": "User cannot login to JDE", "System": "JDE", "Description": "When user key in user and password, it show error as incorrect password.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:00 AM", "Modified": "6/2/2025 9:30 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 2, "Status": "Closed", "Summary": "User cannot print invoice", "System": "JDE", "Description": "After user click on print button, nothing come out from printer.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:05 AM", "Modified": "6/2/2025 9:45 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 3, "Status": "Closed", "Summary": "Invoice printed with wrong amount", "System": "JDE", "Description": "The total amount in the invoice is incorrect. It should be $100 but it is $1,000.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:10 AM", "Modified": "6/2/2025 10:00 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 4, "Status": "Closed", "Summary": "System is very slow", "System": "JDE", "Description": "User has to wait for 5 minutes to open a new screen.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P2", "Impact": "Medium", "Urgency": "Medium", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:15 AM", "Modified": "6/2/2025 10:15 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 5, "Status": "Closed", "Summary": "Cannot create new customer", "System": "JDE", "Description": "When user click on \"Create\" button, it show error message \"Invalid customer ID\".", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:20 AM", "Modified": "6/2/2025 10:30 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 6, "Status": "In Progress", "Summary": "Data is not updated in Power BI", "System": "Power BI", "Description": "The sales data in Power BI is not showing the latest data from yesterday.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:00 AM", "Modified": "6/3/2025 10:30 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 7, "Status": "In Progress", "Summary": "Cannot access shared folder", "System": "Other", "Description": "User cannot access the shared folder to get the report.", "Assign To": "Visal Chan", "Department": "IT", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:05 AM", "Modified": "6/3/2025 10:45 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 8, "Status": "Open", "Summary": "Request for new report", "System": "Power BI", "Description": "User wants a new report to show sales by product category.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:10 AM", "Modified": "6/3/2025 11:00 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 9, "Status": "Open", "Summary": "Wrong email address in the system", "System": "JDE", "Description": "The email address of customer A is incorrect.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Sreylin Chum", "CreatedDate": "6/3/2025 10:15 AM", "Modified": "6/3/2025 11:15 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 10, "Status": "On Hold", "Summary": "Need to clarify the requirement", "System": "Power BI", "Description": "The requirement for the new report is not clear.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:20 AM", "Modified": "6/3/2025 11:30 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 11, "Status": "Canceled", "Summary": "No need this report anymore", "System": "Power BI", "Description": "User has found another report that can be used.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:25 AM", "Modified": "6/3/2025 11:45 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 14, "Status": "In Progress", "Summary": "gR in\" Order Header\" cannot edit", "System": "glassRUN", "Description": "Dear Team, \n\ncurrently, gR in \" Order Header\" cannot edit \nplease check it.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Reaksa Ban", "CreatedDate": "6/5/2025 10:38 AM", "Modified": "6/5/2025 11:00 AM", "Modified By": "Kimleang Ngoun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 15, "Status": "In Progress", "summary": "gR in \" order detail \" have some item have not show price.", "System": "glassRUN", "Description": "Dear Team,\n\ncurrently, gR in \" Order detail \" have some item that does not show the price.\nplease check the attached.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Reaksa Ban", "CreatedDate": "6/5/2025 10:40 AM", "Modified": "6/5/2025 11:05 AM", "Modified By": "Kimleang Ngoun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
+            { "ID": 16, "Status": "New", "Summary": "New distributor code from BC not flow to JDE", "System": "JDE", "Description": "New distributor code from BC not flow to JDE", "Assign To": "Sophal Srun", "Department": "Finance", "Priority": "P2", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/5/2025 11:00 AM", "Modified": "6/5/2025 11:20 AM", "Modified By": "Sophal Srun", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": "Sophorn Huy" }
+        ];
 
-        const renderTag = (type, value, isCompact = false) => {
-            const baseClasses = `inline-flex items-center text-xs leading-5 font-semibold rounded-full ${isCompact ? 'px-2 py-0.5' : 'px-3 py-1'}`;
-            let colorClasses = '';
-            const valueStr = String(value || '').toLowerCase();
+        // --- DATA PROCESSING AND RENDERING ---
 
-            if (type === 'status') {
-                if (valueStr.includes('open')) colorClasses = 'bg-status-open text-white';
-                else if (valueStr.includes('pending')) colorClasses = 'bg-status-pending text-white';
-                else if (valueStr.includes('ready')) colorClasses = 'bg-heineken-green text-white';
-                else if (valueStr.includes('closed')) colorClasses = 'bg-status-closed text-white';
-                else if (valueStr.includes('fixing')) colorClasses = 'bg-status-fixing text-white';
-                else if (valueStr.includes('testing')) colorClasses = 'bg-status-testing text-white';
-            } else if (type === 'priority') {
-                if (valueStr === 'p1') colorClasses = 'bg-heineken-red text-white';
-                else if (valueStr === 'p2') colorClasses = 'bg-priority-p2 text-white';
-                else if (valueStr === 'p3') colorClasses = 'bg-priority-p3 text-white';
-                else if (valueStr === 'p4') colorClasses = 'bg-priority-p4 text-white';
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- SHARED DEFINITIONS ---
+            const systemColors = {
+                "glassRUN": "#10B981",
+                "JDE":      "#3B82F6",
+                "DIS":      "#F59E0B",
+                "Power BI": "#14B8A6",
+                "SEM":      "#D946EF",
+                "DOT":      "#8B5CF6",
+                "Other":    "#64748B"
+            };
+
+            const systemColorClasses = {
+                 "glassRUN": "bg-green-50 text-green-700 border border-green-400",
+                "JDE":      "bg-blue-50 text-blue-700 border border-blue-400",
+                "DIS":      "bg-amber-50 text-amber-700 border border-amber-400",
+                "Power BI": "bg-teal-50 text-teal-700 border border-teal-400",
+                "SEM":      "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-400",
+                "DOT":      "bg-violet-50 text-violet-700 border border-violet-400",
+                "Other":    "bg-slate-50 text-slate-700 border border-slate-400"
             }
-            return `<span class="${baseClasses} ${colorClasses}">${value}</span>`;
-        };
-
-        const renderTableHeader = () => {
-            const tableHead = document.getElementById('issues-table-head');
-            tableHead.innerHTML = '';
-            const headerRow = document.createElement('tr');
             
-            tableHeaders.forEach(key => {
-                const th = document.createElement('th');
-                th.scope = 'col';
-                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer';
-                th.dataset.sort = key;
-                let name = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                th.innerHTML = `${name} &#x2195;`;
-                headerRow.appendChild(th);
-            });
-            tableHead.appendChild(headerRow);
-            updateSortIndicators();
-            document.querySelectorAll('th[data-sort]').forEach(th => th.addEventListener('click', handleSortClick));
-        };
+            const systemStyling = {
+                "glassRUN": { icon: "fa-solid fa-layer-group", color: "text-green-500" },
+                "JDE":      { icon: "fa-solid fa-database", color: "text-blue-500" },
+                "DIS":      { icon: "fa-solid fa-chart-pie", color: "text-amber-500" },
+                "Power BI": { icon: "fa-solid fa-chart-simple", color: "text-teal-500" },
+                "SEM":      { icon: "fa-solid fa-magnifying-glass-chart", color: "text-fuchsia-500" },
+                "DOT":      { icon: "fa-solid fa-circle-nodes", color: "text-violet-500" },
+                "Other":    { icon: "fa-solid fa-question-circle", color: "text-slate-500" }
+            };
 
-        const renderTable = (data) => {
-            const tableBody = document.getElementById('issues-table-body');
-            tableBody.innerHTML = '';
-            if (data.length === 0) {
-                 tableBody.innerHTML = `<tr><td colspan="${tableHeaders.length || 1}" class="text-center py-10 text-gray-500">No issues found. Please upload a file or adjust filters.</td></tr>`;
-                 return;
+            const statusMap = {
+                "New": "Open", "Open": "Open", 
+                "In Progress": "Fixing", "Fixing": "Fixing", 
+                "On Hold": "Pending", "Pending": "Pending",
+                "Ready To Test": "Ready To Test", 
+                "Testing": "Testing", 
+                "Closed": "Closed", 
+                "Canceled": "Closed" 
+            };
+            
+            const statusStyles = {
+                "Open":         { order: 1, icon: "fa-solid fa-folder-open",   color: "red" },
+                "Fixing":       { order: 2, icon: "fa-solid fa-wrench",        color: "blue" },
+                "Pending":      { order: 3, icon: "fa-solid fa-pause",         color: "yellow" },
+                "Ready To Test":{ order: 4, icon: "fa-solid fa-flag-checkered",color: "cyan" },
+                "Testing":      { order: 5, icon: "fa-solid fa-vial",          color: "teal" },
+                "Closed":       { order: 6, icon: "fa-solid fa-circle-check",  color: "green" },
+                "Uncategorized": { order: 7, icon: "fa-solid fa-question-circle", color: "gray" }
+            };
+
+            const departmentStyling = {
+                "Logistic":    { icon: "fa-solid fa-truck-ramp-box", color: "text-orange-500" },
+                "OtC":         { icon: "fa-solid fa-file-invoice-dollar", color: "text-green-500" },
+                "DMT":         { icon: "fa-solid fa-briefcase", color: "text-purple-500" },
+                "Tax":         { icon: "fa-solid fa-landmark", color: "text-amber-500" },
+                "RTR":         { icon: "fa-solid fa-chart-line", color: "text-sky-500" },
+                "Procurement": { icon: "fa-solid fa-cart-shopping", color: "text-pink-500" },
+                "Finance":     { icon: "fa-solid fa-piggy-bank", color: "text-lime-500" },
+                "IT":          { icon: "fa-solid fa-desktop", color: "text-indigo-500" },
+                "Other":       { icon: "fa-solid fa-building-user", color: "text-slate-500" }
+            };
+
+            const priorityStyles = {
+                "P1": { name: "Critical", icon: "fa-solid fa-triangle-exclamation", color: "red" },
+                "P2": { name: "High",     icon: "fa-solid fa-arrow-up",            color: "orange" },
+                "P3": { name: "Medium",   icon: "fa-solid fa-equals",              color: "amber" },
+                "P4": { name: "Low",      icon: "fa-solid fa-arrow-down",          color: "sky" }
+            };
+
+            function updateAllVisualizations(currentData) {
+                renderStickyHeader(currentData);
+                renderStatusSummary(currentData);
+                renderDepartmentSummary(currentData);
+                renderPrioritySummary(currentData);
+                renderSystemSummary(currentData);
+                renderDistributorChart(currentData);
+                renderReporterChart(currentData);
+                renderTicketsByDateChart(currentData);
             }
-            data.forEach(issue => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-100 cursor-pointer';
-                row.addEventListener('click', () => showIssueModal(issue));
-                let rowHTML = '';
-                tableHeaders.forEach(header => {
-                    let cellValue = issue[header] || '';
-                    if (header.toLowerCase() === 'status') cellValue = renderTag('status', cellValue);
-                    else if (header.toLowerCase() === 'priority') cellValue = renderTag('priority', cellValue);
-                    rowHTML += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${cellValue}</td>`;
+
+            // --- RENDER STICKY HEADER ---
+            function renderStickyHeader(data) {
+                document.getElementById('total-issues').textContent = data.length;
+                const totalSystemCounts = data.reduce((acc, issue) => {
+                    const systemKey = systemColorClasses.hasOwnProperty(issue.System) ? issue.System : "Other";
+                    acc[systemKey] = (acc[systemKey] || 0) + 1;
+                    return acc;
+                }, {});
+                const totalBadgeContainer = document.getElementById('system-badges-container');
+                totalBadgeContainer.innerHTML = '';
+                Object.keys(totalSystemCounts).sort().forEach(system => {
+                    totalBadgeContainer.innerHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${totalSystemCounts[system]}</span>`;
                 });
-                row.innerHTML = rowHTML;
-                tableBody.appendChild(row);
-            });
-        };
-        
-        const updateHeaderAndTotalIssues = () => {
-            document.getElementById('header-total-issues-count').textContent = issuesData.length;
-        };
+                const timestampContainer = document.getElementById('timestamp-container');
+                timestampContainer.textContent = `Report generated: ${new Date().toLocaleString()}`;
+            }
 
-        const updateDashboardStats = () => {
-            const container = document.getElementById('status-glance-container');
-            container.innerHTML = ''; // Clear existing cards first
-
-            const statusesInOrder = ['Open', 'Ready To Test', 'Fixing', 'Testing', 'Pending', 'Closed'];
-            const statusEmojis = {'Open': '📂', 'Ready To Test': '✅', 'Fixing': '🛠️', 'Testing': '🔬', 'Pending': '⏳', 'Closed': '🏁'};
-
-            statusesInOrder.forEach(status => {
-                const filteredIssues = issuesData.filter(i => i.status === status);
-                const total = filteredIssues.length;
-                const breakdown = filteredIssues.reduce((acc, issue) => {
-                    const system = issue.system || 'Unassigned';
-                    acc[system] = (acc[system] || 0) + 1;
+            // --- RENDER STATUS SUMMARY SECTION ---
+            function renderStatusSummary(data) {
+                const statusCounts = data.reduce((acc, issue) => {
+                    const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                    acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
                     return acc;
                 }, {});
 
-                let color = 'gray-500';
-                if (status === 'Open') color = 'status-open';
-                else if (status === 'Ready To Test') color = 'heineken-green';
-                else if (status === 'Fixing') color = 'status-fixing';
-                else if (status === 'Testing') color = 'status-testing';
-                else if (status === 'Pending') color = 'status-pending';
-                else if (status === 'Closed') color = 'status-closed';
-
-                const card = document.createElement('div');
-                card.className = `bg-white rounded-lg shadow-sm p-6 border-t-4 border-${color} flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300`;
-                card.addEventListener('click', () => navigateToIssuesAndFilter({ status: status }));
-                
-                const breakdownContainer = document.createElement('div');
-                breakdownContainer.className = 'text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100 space-y-1';
-                
-                if (Object.keys(breakdown).length > 0) {
-                     const wrapper = document.createElement('div');
-                     wrapper.className = 'flex flex-wrap gap-1';
-                     Object.entries(breakdown).forEach(([system, count]) => {
-                        const tag = document.createElement('span');
-                        tag.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${color} bg-opacity-10 text-${color} border border-${color}`;
-                        tag.innerHTML = `${system} <span class="ml-1.5 font-bold">${count}</span>`;
-                        wrapper.appendChild(tag);
+                const container = document.getElementById('status-cards-container');
+                container.innerHTML = '';
+                Object.keys(statusCounts).sort((a, b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99))
+                .forEach(status => {
+                    const count = statusCounts[status];
+                    const style = statusStyles[status] || statusStyles["Uncategorized"];
+                    const issuesInStatus = data.filter(issue => (statusMap[issue.Status] || "Uncategorized") === status);
+                    const systemCountsInStatus = issuesInStatus.reduce((acc, issue) => {
+                        const systemKey = systemColorClasses.hasOwnProperty(issue.System) ? issue.System : "Other";
+                        acc[systemKey] = (acc[systemKey] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let badgesHTML = '';
+                    Object.keys(systemCountsInStatus).sort().forEach(system => {
+                        badgesHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${systemCountsInStatus[system]}</span>`;
                     });
-                    breakdownContainer.appendChild(wrapper);
-                } else {
-                     breakdownContainer.innerHTML = '<p class="text-gray-400">No issues</p>';
-                }
-
-                card.innerHTML = `
-                    <h3 class="text-base font-medium text-gray-500 truncate">${statusEmojis[status] || ''} ${status}</h3>
-                    <div class="mt-1 flex-grow"><p class="text-5xl font-bold text-${color}">${total}</p></div>
-                `;
-                card.appendChild(breakdownContainer);
-                container.appendChild(card);
-            });
-        };
-        
-        const createGlanceCard = (title, total, colorClass, breakdown, clickHandler, emoji = '') => {
-            const card = document.createElement('div');
-            card.className = `bg-white rounded-lg shadow-sm p-4 flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300 border-l-4 ${colorClass}`;
-            if(clickHandler) card.addEventListener('click', clickHandler);
-            card.innerHTML = `
-                <div class="flex-grow">
-                    <h4 class="text-md font-semibold text-gray-800 truncate">${emoji} ${title}</h4>
-                    <p class="text-3xl font-bold text-gray-800 mt-1">${total}</p>
-                    <p class="text-sm text-gray-500">Total Issue${total !== 1 ? 's' : ''}</p>
-                </div>
-                <div class="mt-3 pt-3 border-t border-gray-100 space-y-1 text-sm">${breakdown || ''}</div>
-            `;
-            return card;
-        };
-
-        const getDeptVisuals = (deptName) => {
-            const colors = ['border-blue-500', 'border-purple-500', 'border-pink-500', 'border-teal-500', 'border-orange-500'];
-            const emojis = ['🏢', '💼', '📈', '💻', '📊', '📞', '🧑‍💻', '🛒'];
-            let hash = 0;
-            if (!deptName) return { color: 'border-gray-400', emoji: '❔' };
-            for (let i = 0; i < deptName.length; i++) hash = deptName.charCodeAt(i) + ((hash << 5) - hash);
-            return { color: colors[Math.abs(hash) % colors.length], emoji: emojis[Math.abs(hash) % emojis.length] };
-        };
-        
-        const updatePriorityGlance = () => {
-            const container = document.getElementById('priority-glance-container');
-            container.innerHTML = '';
-            const priorities = { 'P1': 'border-heineken-red', 'P2': 'border-priority-p2', 'P3': 'border-priority-p3', 'P4': 'border-priority-p4' };
-
-            for(const priority in priorities) {
-                const color = priorities[priority];
-                const issues = issuesData.filter(i => String(i.priority).toUpperCase() === priority);
-                const total = issues.length;
-                
-                const statusBreakdown = issues.reduce((acc, issue) => { acc[issue.status] = (acc[issue.status] || 0) + 1; return acc; }, {});
-                let breakdownHTML = `
-                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${statusBreakdown['Open'] || 0}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${statusBreakdown['Pending'] || 0}</span></div>
-                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${statusBreakdown['Ready To Test'] || 0}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${statusBreakdown['Testing'] || 0}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${statusBreakdown['Fixing'] || 0}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${statusBreakdown['Closed'] || 0}</span></div>
-                `;
-
-                breakdownHTML += '<div class="border-t border-gray-100 my-2"></div>';
-                
-                const deptBreakdown = issues.reduce((acc, issue) => { acc[issue.department || 'Unassigned'] = (acc[issue.department || 'Unassigned'] || 0) + 1; return acc; }, {});
-                breakdownHTML += '<div class="font-semibold text-xs uppercase text-gray-400 mb-2">By Department</div>';
-                const deptWrapper = document.createElement('div');
-                deptWrapper.className = 'flex flex-wrap gap-1';
-                Object.entries(deptBreakdown).forEach(([dept, count]) => {
-                    const { color: deptColor, emoji } = getDeptVisuals(dept);
-                    const baseColor = deptColor.replace('border-', '');
-                    const tag = document.createElement('span');
-                    tag.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${baseColor}-100 text-${baseColor}-800`;
-                    tag.innerHTML = `${emoji} ${dept} <span class="ml-1.5 font-bold">${count}</span>`;
-                    deptWrapper.appendChild(tag);
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center justify-between border-l-4 border-${style.color}-500">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">${status}</p>
+                                <p class="text-3xl font-bold text-gray-800">${count}</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex flex-wrap gap-1 justify-end max-w-[160px]">
+                                    ${badgesHTML}
+                                </div>
+                                <div class="bg-${style.color}-100 rounded-full p-3 flex-shrink-0">
+                                    <i class="${style.icon} text-${style.color}-500 text-2xl fa-fw"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
-                breakdownHTML += deptWrapper.outerHTML;
-
-                container.appendChild(createGlanceCard(priority, total, color, breakdownHTML, () => navigateToIssuesAndFilter({ priority: priority })));
-            }
-        };
-        
-        const updateDepartmentGlance = () => {
-            const container = document.getElementById('department-glance-container');
-            container.innerHTML = '';
-            const deptData = issuesData.reduce((acc, issue) => {
-                const dept = issue.department || 'Unassigned';
-                if (!acc[dept]) acc[dept] = { 'Open': 0, 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
-                if (acc[dept][issue.status] !== undefined) acc[dept][issue.status]++;
-                acc[dept].total++;
-                return acc;
-            }, {});
-
-            if (Object.keys(deptData).length === 0) {
-                container.innerHTML = `<p class="text-gray-500 col-span-full">No departments found.</p>`; return;
             }
 
-            for(const dept in deptData) {
-                 const data = deptData[dept];
-                 const { color, emoji } = getDeptVisuals(dept);
-                 const breakdownHTML = `
-                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${data['Open']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
-                `;
-                container.appendChild(createGlanceCard(dept, data.total, color, breakdownHTML, () => navigateToIssuesAndFilter({ department: dept }), emoji));
-            }
-        };
-
-        const updateSystemGlance = () => {
-            const container = document.getElementById('system-glance-container');
-            container.innerHTML = '';
-            const systemData = issuesData.reduce((acc, issue) => {
-                const system = issue.system || 'Unassigned';
-                if (!acc[system]) acc[system] = { 'Open': 0, 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
-                if (acc[system][issue.status] !== undefined) acc[system][issue.status]++;
-                acc[system].total++;
-                return acc;
-            }, {});
-
-            if (Object.keys(systemData).length === 0) {
-                container.innerHTML = `<p class="text-gray-500 col-span-full">No systems found.</p>`; return;
-            }
-
-            for (const system in systemData) {
-                 const data = systemData[system];
-                 const breakdownHTML = `
-                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${data['Open']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
-                `;
-                 container.appendChild(createGlanceCard(system, data.total, 'border-heineken-green', breakdownHTML, () => navigateToIssuesAndFilter({ system: system })));
-            }
-        };
-        
-        const updateReporterGlance = () => {
-            const container = document.getElementById('reporter-glance-container');
-            container.innerHTML = '';
-            const reporterData = issuesData.reduce((acc, issue) => {
-                const reporter = issue.createdBy || 'Unassigned';
-                acc[reporter] = (acc[reporter] || 0) + 1;
-                return acc;
-            }, {});
-
-            const sortedReporters = Object.entries(reporterData).sort((a,b) => b[1] - a[1]);
-
-            if(sortedReporters.length === 0) {
-                 container.innerHTML = `<div class="text-gray-500">No reporters found.</div>`; return;
-            }
-
-            sortedReporters.forEach(([name, total]) => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-2 hover:bg-gray-100 rounded-md cursor-pointer';
-                item.addEventListener('click', () => navigateToIssuesAndFilter({ reporter: name }));
-                item.innerHTML = `
-                    <span class="text-sm font-medium text-gray-700">🙋 ${name}</span>
-                    <span class="text-lg font-bold text-gray-800">${total}</span>
-                `;
-                container.appendChild(item);
-            });
-        };
-
-        const updateAssigneeGlance = () => {
-            const container = document.getElementById('assignee-glance-container');
-            container.innerHTML = '';
-            const assigneeData = issuesData.reduce((acc, issue) => {
-                const assignee = issue.assignTo || 'Unassigned';
-                if (!acc[assignee]) acc[assignee] = { 'Open': 0, 'Pending': 0, 'Ready To Test': 0, 'Testing': 0, 'Fixing': 0, 'Closed': 0, total: 0 };
-                if (acc[assignee][issue.status] !== undefined) acc[assignee][issue.status]++;
-                acc[assignee].total++;
-                return acc;
-            }, {});
-            
-            const sortedAssignees = Object.entries(assigneeData).sort((a, b) => b[1].total - a[1].total);
-
-            if(sortedAssignees.length === 0) {
-                 container.innerHTML = `<div class="text-gray-500">No assignees found.</div>`; return;
-            }
-            
-            sortedAssignees.forEach(([name, data]) => {
-                const breakdownHTML = `
-                    <div class="flex justify-between items-center text-xs text-status-open"><span>Open</span><span class="font-bold">${data['Open']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-pending"><span>Pending</span><span class="font-bold">${data['Pending']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-heineken-green"><span>Ready To Test</span><span class="font-bold">${data['Ready To Test']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-testing"><span>Testing</span><span class="font-bold">${data['Testing']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-fixing"><span>Fixing</span><span class="font-bold">${data['Fixing']}</span></div>
-                    <div class="flex justify-between items-center text-xs text-status-closed"><span>Closed</span><span class="font-bold">${data['Closed']}</span></div>
-                `;
-                const item = document.createElement('div');
-                item.className = 'p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-purple-500';
-                item.addEventListener('click', () => navigateToIssuesAndFilter({ assignee: name }));
-                item.innerHTML = `
-                    <div class="flex justify-between items-baseline">
-                         <h5 class="font-semibold text-gray-800">🧑‍💻 ${name}</h5>
-                         <span class="text-2xl font-bold text-gray-800">${data.total}</span>
-                    </div>
-                    <div class="mt-2 pt-2 border-t border-gray-100 space-y-1">${breakdownHTML}</div>
-                `;
-                container.appendChild(item);
-            });
-        };
-
-        const updateDistributorGlance = () => {
-            const container = document.getElementById('distributor-glance-container');
-            container.innerHTML = '';
-            const distributorData = issuesData.reduce((acc, issue) => {
-                const distributors = String(issue.impactedDistributor || '').split(',').map(d => d.trim()).filter(Boolean);
-                distributors.forEach(distributor => {
-                    acc[distributor] = (acc[distributor] || 0) + 1;
-                });
-                return acc;
-            }, {});
-            
-            const sortedDistributors = Object.entries(distributorData).sort((a,b) => b[1] - a[1]);
-            
-            if (sortedDistributors.length === 0) {
-                 container.innerHTML = `<div class="text-gray-500">No distributors found.</div>`; return;
-            }
-
-            sortedDistributors.forEach(([distributor, total]) => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-2 hover:bg-gray-100 rounded-md cursor-pointer';
-                item.addEventListener('click', () => navigateToIssuesAndFilter({ distributor: distributor }));
-                item.innerHTML = `
-                    <span class="text-sm font-medium text-gray-700">🚚 ${distributor}</span>
-                    <span class="text-lg font-bold text-gray-800">${total}</span>
-                `;
-                container.appendChild(item);
-            });
-        };
-        
-        const populateFilters = () => {
-            const populate = (filterEl, key, isMulti = false) => {
-                const currentVal = filterEl.value;
-                const options = filterEl.querySelectorAll('option:not([value="all"])');
-                options.forEach(o => o.remove());
-                let items;
-                if (key === 'priority') {
-                    items = ['P1', 'P2', 'P3', 'P4']; 
-                } else if (isMulti) {
-                    const allItems = new Set();
-                    issuesData.forEach(i => {
-                        String(i[key] || '').split(',').map(item => item.trim()).filter(Boolean).forEach(item => allItems.add(item));
+            // --- RENDER DEPARTMENT SUMMARY SECTION ---
+            function renderDepartmentSummary(data) {
+                const departmentData = data.reduce((acc, issue) => {
+                    const dept = issue.Department;
+                     if (!dept) return acc;
+                    if (!acc[dept]) acc[dept] = [];
+                    acc[dept].push(issue);
+                    return acc;
+                }, {});
+                
+                const container = document.getElementById('department-cards-container');
+                container.innerHTML = '';
+                Object.keys(departmentData).sort().forEach(deptName => {
+                    const issuesInDept = departmentData[deptName];
+                    const total = issuesInDept.length;
+                    const style = departmentStyling[deptName] || departmentStyling["Other"];
+                    const statuses = issuesInDept.reduce((acc, issue) => {
+                        const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                        acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                        return acc;
+                    }, {});
+                    const systems = issuesInDept.reduce((acc, issue) => {
+                         const systemKey = systemColorClasses.hasOwnProperty(issue.System) ? issue.System : "Other";
+                         acc[systemKey] = (acc[systemKey] || 0) + 1;
+                         return acc;
+                    }, {});
+                    let systemBadgesHTML = '<div class="flex flex-wrap gap-2 mt-4">';
+                     Object.keys(systems).sort().forEach(system => {
+                        systemBadgesHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${systems[system]}</span>`;
                     });
-                    items = [...allItems].sort((a,b) => a.localeCompare(b));
-                } else {
-                    items = [...new Set(issuesData.map(i => i[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-                }
-                
-                items.forEach(item => {
-                    if (filterEl.querySelector(`option[value="${item}"]`)) return;
-                    const option = document.createElement('option');
-                    option.value = item; option.textContent = item;
-                    filterEl.appendChild(option);
+                    systemBadgesHTML += '</div>';
+                    let statusHTML = '<div class="space-y-2 mt-4 pt-4 border-t border-gray-100">';
+                    const sortedStatuses = Object.keys(statuses).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
+                    sortedStatuses.forEach(statusName => {
+                        const count = statuses[statusName];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Default'];
+                        statusHTML += `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-${statusStyle.color}-500 mr-2"></span>
+                                    <span>${statusName}</span>
+                                </div>
+                                <span class="font-semibold text-gray-700">${count}</span>
+                            </div>
+                        `;
+                    });
+                    statusHTML += '</div>';
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                    <h3 class="font-bold text-gray-800">${deptName}</h3>
+                                </div>
+                                <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                            </div>
+                            ${total > 0 ? systemBadgesHTML : ''}
+                            ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                        </div>
+                    `;
                 });
-                if ([...filterEl.options].some(o => o.value === currentVal)) {
-                    filterEl.value = currentVal;
-                } else {
-                    filterEl.value = 'all';
-                }
-            };
-            populate(document.getElementById('filter-system'), 'system');
-            populate(document.getElementById('filter-department'), 'department');
-            populate(document.getElementById('filter-assignee'), 'assignTo');
-            populate(document.getElementById('filter-reporter'), 'createdBy');
-            populate(document.getElementById('filter-distributor'), 'impactedDistributor', true);
-        };
+            }
 
-        const processAndRenderTable = () => {
-            const filters = {
-                status: document.getElementById('filter-status').value,
-                priority: document.getElementById('filter-priority').value,
-                system: document.getElementById('filter-system').value,
-                department: document.getElementById('filter-department').value,
-                assignTo: document.getElementById('filter-assignee').value,
-                createdBy: document.getElementById('filter-reporter').value,
-                distributor: document.getElementById('filter-distributor').value,
-            };
-            
-            let processedData = issuesData.filter(issue => {
-                const statusMatch = filters.status === 'all' || issue.status === filters.status;
-                const priorityMatch = filters.priority === 'all' || String(issue.priority).toUpperCase() === filters.priority;
-                const systemMatch = filters.system === 'all' || issue.system === filters.system;
-                const deptMatch = filters.department === 'all' || issue.department === filters.department;
-                const assigneeMatch = filters.assignTo === 'all' || issue.assignTo === filters.assignTo;
-                const reporterMatch = filters.createdBy === 'all' || issue.createdBy === filters.createdBy;
-                const distributorMatch = filters.distributor === 'all' || String(issue.impactedDistributor || '').split(',').map(d => d.trim()).includes(filters.distributor);
-                return statusMatch && priorityMatch && systemMatch && deptMatch && assigneeMatch && reporterMatch && distributorMatch;
-            });
-            processedData.sort((a, b) => {
-                const valA = a[currentSort.key]; const valB = b[currentSort.key];
-                let comparison = (valA > valB) ? 1 : (valA < valB) ? -1 : 0;
-                return currentSort.direction === 'desc' ? comparison * -1 : comparison;
-            });
-            renderTable(processedData);
-        };
-        
-        const updateSortIndicators = () => {
-            document.querySelectorAll('th[data-sort]').forEach(th => {
-                const key = th.dataset.sort;
-                let name = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                th.innerHTML = key === currentSort.key ? `${name} ${currentSort.direction === 'asc' ? '&#x2197;' : '&#x2198;'}` : `${name} &#x2195;`;
-            });
-        };
+            // --- RENDER PRIORITY SUMMARY SECTION ---
+            function renderPrioritySummary(data) {
+                const priorityGroups = data.reduce((acc, issue) => {
+                    const priority = issue.Priority;
+                    if (!priority) return acc;
+                    if (!acc[priority]) acc[priority] = [];
+                    acc[priority].push(issue);
+                    return acc;
+                }, {});
+                const container = document.getElementById('priority-cards-container');
+                container.innerHTML = '';
+                Object.keys(priorityStyles).forEach(priorityKey => {
+                    const issues = priorityGroups[priorityKey] || [];
+                    const style = priorityStyles[priorityKey];
+                    const total = issues.length;
+                    const systemCounts = issues.reduce((acc, issue) => {
+                        acc[issue.System] = (acc[issue.System] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let systemsHTML = '';
+                     Object.keys(systemCounts).sort().forEach(sys => {
+                        systemsHTML += `<span class="${systemColorClasses[sys] || systemColorClasses['Other']} text-xs font-semibold px-2 py-1 rounded-full">${sys} (${systemCounts[sys]})</span>`;
+                    });
+                    const deptCounts = issues.reduce((acc, issue) => {
+                        acc[issue.Department] = (acc[issue.Department] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let deptsHTML = '';
+                    Object.keys(deptCounts).sort().forEach(dept => {
+                        deptsHTML += `<span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">${dept} (${deptCounts[dept]})</span>`;
+                    });
+                    const statusCounts = issues.reduce((acc, issue) => {
+                        const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                        acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let statusHTML = '<div class="space-y-2 mt-4 pt-4 border-t border-gray-200">';
+                    const sortedStatuses = Object.keys(statusCounts).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
+                    sortedStatuses.forEach(statusName => {
+                        const count = statusCounts[statusName];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Default'];
+                        statusHTML += `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-${statusStyle.color}-500 mr-2"></span>
+                                    <span>${statusName}</span>
+                                </div>
+                                <span class="font-semibold text-gray-700">${count}</span>
+                            </div>
+                        `;
+                    });
+                    statusHTML += '</div>';
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-${style.color}-500">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-gray-800">${priorityKey} - ${style.name}</h3>
+                                <i class="${style.icon} text-${style.color}-500 text-2xl"></i>
+                            </div>
+                            <p class="text-4xl font-bold text-gray-800 mt-4">${total}</p>
+                            <div class="mt-4 space-y-3">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 mb-2">Systems</h4>
+                                    <div class="flex flex-wrap gap-2">${systemsHTML}</div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 mb-2">Departments</h4>
+                                    <div class="flex flex-wrap gap-2">${deptsHTML}</div>
+                                </div>
+                            </div>
+                            ${total > 0 ? statusHTML : ''}
+                        </div>
+                    `;
+                });
+            }
 
-        const updateTimestamp = () => {
-            const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            document.getElementById('report-timestamp').textContent = `Report Generated: ${now}`;
-            document.getElementById('last-updated').textContent = `Last Data Upload: ${now}`;
-        };
-        
-       const mapData = (jsonData) => {
-            if (!jsonData || jsonData.length === 0) return [];
-            const standardOrder = ['id', 'status', 'summary', 'system', 'priority', 'department', 'assignTo', 'createdBy', 'createdDate', 'impactedDistributor', 'description'];
-            const mapping = {
-                id: ['id'], status: ['status'], summary: ['summary', 'title'], system: ['system'],
-                priority: ['priority'], assignTo: ['assignto', 'assign to', 'assigned to'],
-                createdBy: ['createdby', 'created by', 'reporter'],
-                createdDate: ['createddate', 'created date', 'date'], description: ['description'],
-                department: ['department', 'dept'], impactedDistributor: ['impacteddistributor', 'impacted distributor']
-            };
+             // --- RENDER SYSTEM SUMMARY SECTION ---
+            function renderSystemSummary(data) {
+                const systemGroups = data.reduce((acc, issue) => {
+                    const system = issue.System;
+                    if (!system) return acc;
+                    const systemKey = systemColorClasses.hasOwnProperty(system) ? system : "Other";
+                    if (!acc[systemKey]) acc[systemKey] = [];
+                    acc[systemKey].push(issue);
+                    return acc;
+                }, {});
 
-            const mappedData = jsonData.map(row => {
-                const newRow = {};
-                for (const originalHeader in row) {
-                    const headerLower = originalHeader.toLowerCase().replace(/\s/g, '');
-                    let standardKey = null;
-                    for (const key in mapping) {
-                        if (mapping[key].includes(headerLower)) {
-                            standardKey = key;
-                            break;
+                const container = document.getElementById('system-cards-container');
+                container.innerHTML = '';
+
+                Object.keys(systemGroups).sort().forEach(systemName => {
+                    const issuesInSystem = systemGroups[systemName] || [];
+                    const total = issuesInSystem.length;
+                    const style = systemStyling[systemName];
+
+                    const statusCounts = issuesInSystem.reduce((acc, issue) => {
+                        const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                        acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let statusHTML = '<div class="space-y-2 mt-4 pt-4 border-t border-gray-100">';
+                    const sortedStatuses = Object.keys(statusCounts).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
+                    sortedStatuses.forEach(statusName => {
+                        const count = statusCounts[statusName];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Default'];
+                        statusHTML += `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-${statusStyle.color}-500 mr-2"></span>
+                                    <span>${statusName}</span>
+                                </div>
+                                <span class="font-semibold text-gray-700">${count}</span>
+                            </div>`;
+                    });
+                    statusHTML += '</div>';
+
+                    const priorityCounts = issuesInSystem.reduce((acc, issue) => {
+                        if(issue.Priority) acc[issue.Priority] = (acc[issue.Priority] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let priorityHTML = '<div class="mt-4 pt-4 border-t border-gray-100"><h4 class="text-sm font-semibold text-gray-500 mb-2">Priority Breakdown</h4><div class="flex flex-wrap gap-2">';
+                    Object.keys(priorityStyles).forEach(priorityKey => {
+                        if (priorityCounts[priorityKey]) {
+                            priorityHTML += `<span class="bg-${priorityStyles[priorityKey].color}-100 text-${priorityStyles[priorityKey].color}-800 text-xs font-semibold px-2 py-1 rounded-full">${priorityKey} (${priorityCounts[priorityKey]})</span>`;
                         }
-                    }
-                    if (standardKey) {
-                         newRow[standardKey] = row[originalHeader];
-                    } else {
-                         const newKey = originalHeader.replace(/\s(.)/g, (m, g) => g.toUpperCase()).replace(/\s/g, '').replace(/^(.)/, (m, g) => g.toLowerCase());
-                         newRow[newKey] = row[originalHeader];
-                    }
+                    });
+                    priorityHTML += '</div></div>';
+
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                    <h3 class="font-bold text-gray-800">${systemName}</h3>
+                                </div>
+                                <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                            </div>
+                             ${total > 0 ? priorityHTML : ''}
+                            ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                        </div>
+                    `;
+                });
+            }
+            
+             // --- RENDER DISTRIBUTOR CHART ---
+            function renderDistributorChart(data) {
+                const container = d3.select("#distributor-chart-container");
+                container.html("");
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+
+                const distributorData = d3.group(data, d => d["Impacted Distributor"]);
+                
+                const processedData = Array.from(distributorData, ([distributor, issues]) => {
+                    if (distributor === null || distributor === '') return null;
+                    const systemCounts = d3.rollup(issues, v => v.length, d => {
+                        return systemColors.hasOwnProperty(d.System) ? d.System : "Other";
+                    });
+                    const systems = Array.from(systemCounts, ([system, count]) => ({ system, count }));
+                    const total = d3.sum(systems, d => d.count);
+                    return { distributor, systems, total };
+                }).filter(Boolean).sort((a, b) => b.total - a.total);
+
+                const systems = Object.keys(systemColors);
+                const margin = {top: 20, right: 40, bottom: 40, left: 250};
+                const parentWidth = container.node().getBoundingClientRect().width;
+                const width = parentWidth > 0 ? parentWidth - margin.left - margin.right : 500;
+                const height = processedData.length * 50;
+
+                const svg = container.append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+                
+                const y = d3.scaleBand()
+                    .domain(processedData.map(d => d.distributor))
+                    .range([0, height])
+                    .padding(0.3);
+
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(processedData, d => d.total) || 1])
+                    .range([0, width]);
+
+                const color = d3.scaleOrdinal()
+                    .domain(systems)
+                    .range(Object.values(systemColors));
+
+                const stack = d3.stack()
+                    .keys(systems)
+                    .value((d, key) => {
+                        const systemData = d.systems.find(s => s.system === key);
+                        return systemData ? systemData.count : 0;
+                    });
+                
+                const series = stack(processedData);
+                
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                        .attr("fill", d => color(d.key))
+                    .selectAll("rect")
+                    .data(d => d)
+                    .join("rect")
+                        .attr("y", d => y(d.data.distributor))
+                        .attr("x", d => x(d[0]))
+                        .attr("width", d => x(d[1]) - x(d[0]))
+                        .attr("height", y.bandwidth())
+                        .on("mouseover", (event, d) => {
+                            const systemName = d3.select(event.currentTarget.parentNode).datum().key;
+                            const count = d[1] - d[0];
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d.data.distributor}</b><br>${systemName}: ${count}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+                
+                 svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                    .selectAll("text")
+                    .data(d => d)
+                    .join("text")
+                    .text(d => {
+                        const value = d[1] - d[0];
+                        return value > 0 ? value : "";
+                    })
+                    .attr("x", d => x(d[0]) + (x(d[1]) - x(d[0])) / 2)
+                    .attr("y", d => y(d.data.distributor) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "500");
+
+                svg.append("g")
+                    .selectAll("text")
+                    .data(processedData)
+                    .join("text")
+                    .text(d => d.total)
+                    .attr("x", d => x(d.total) + 8)
+                    .attr("y", d => y(d.distributor) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("fill", "#1f2937")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "600");
+
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSize(0))
+                    .select(".domain").remove();
+                
+                const legendContainer = document.getElementById('distributor-legend-container');
+                legendContainer.innerHTML = ''; 
+                systems.forEach(system => {
+                    const colorValue = systemColors[system];
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${colorValue}"></div>
+                        <span class="text-sm text-gray-600">${system}</span>
+                    `;
+                    legendContainer.appendChild(legendItem);
+                });
+            }
+
+            // --- RENDER REPORTER DONUT CHART ---
+            function renderReporterChart(data) {
+                const container = d3.select("#reporter-chart-container");
+                container.html(""); 
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+                
+                const reporterData = d3.group(data, d => d["Created By"]);
+                const processedData = Array.from(reporterData, ([reporter, issues]) => ({
+                    name: reporter,
+                    count: issues.length
+                })).sort((a,b) => b.count - a.count);
+
+                const totalIssuesInChart = d3.sum(processedData, d => d.count);
+
+                const width = 300, height = 300, margin = 20;
+                const radius = Math.min(width, height) / 2 - margin;
+                
+                const svg = container.append("div").attr("class", "relative")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .append("g")
+                    .attr("transform", `translate(${width/2},${height/2})`);
+                
+                const color = d3.scaleOrdinal(d3.schemeTableau10);
+
+                const pie = d3.pie()
+                    .value(d => d.count)
+                    .sort(null);
+
+                const arc = d3.arc()
+                    .innerRadius(radius * 0.6)
+                    .outerRadius(radius);
+                
+                const arcs = pie(processedData);
+
+                svg.selectAll('path')
+                    .data(arcs)
+                    .join('path')
+                    .attr('d', arc)
+                    .attr('fill', (d, i) => color(i))
+                    .attr('stroke', 'white')
+                    .style('stroke-width', '2px')
+                    .on("mouseover", (event, d) => {
+                        tooltip.style("opacity", 1)
+                            .html(`<b>${d.data.name}</b><br>${d.data.count} issues (${((d.data.count / totalIssuesInChart) * 100).toFixed(1)}%)`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                        d3.select(event.currentTarget).transition().duration(200).attr('transform', `scale(1.05)`);
+                    })
+                    .on("mouseout", (event, d) => {
+                        tooltip.style("opacity", 0);
+                        d3.select(event.currentTarget).transition().duration(200).attr('transform', `scale(1)`);
+                    });
+
+                svg.selectAll('text.slice-label')
+                    .data(arcs)
+                    .join('text')
+                    .attr('class', 'slice-label')
+                    .attr('transform', d => `translate(${arc.centroid(d)})`)
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '0.35em')
+                    .style('fill', 'white')
+                    .style('font-size', '12px')
+                    .style('font-weight', 'bold')
+                    .text(d => `${((d.data.count / totalIssuesInChart) * 100).toFixed(0)}%`);
+
+                 svg.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '-0.5em')
+                    .style('font-size', '2.5rem')
+                    .style('font-weight', 'bold')
+                    .style('fill', '#1f2937')
+                    .text(totalIssuesInChart);
+                 svg.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '1em')
+                    .style('font-size', '0.9rem')
+                    .style('fill', '#6b7280')
+                    .text('Total Issues');
+
+                const legendContainer = container.append('div')
+                    .attr('class', 'grid grid-cols-2 gap-x-6 gap-y-3');
+                
+                processedData.forEach((d, i) => {
+                    const legendItem = legendContainer.append('div').attr('class', 'flex items-center');
+                    legendItem.append('div')
+                        .attr('class', 'w-4 h-4 rounded-sm mr-2')
+                        .style('background-color', color(i));
+                    legendItem.append('span')
+                        .attr('class', 'text-sm text-gray-700')
+                        .text(`${d.name} (${d.count})`);
+                });
+            }
+            
+            // --- RENDER TICKETS BY DATE CHART ---
+            function renderTicketsByDateChart(data) {
+                const container = d3.select("#tickets-by-date-chart-container");
+                container.html("");
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+                
+                const parseDate = d3.timeParse("%m/%d/%Y %I:%M %p");
+                
+                const dataByDate = d3.group(data, d => d3.timeFormat("%Y-%m-%d")(parseDate(d.CreatedDate)));
+                
+                const processedData = Array.from(dataByDate, ([date, issues]) => {
+                    const systemCounts = d3.rollup(issues, v => v.length, d => {
+                        return systemColors.hasOwnProperty(d.System) ? d.System : "Other";
+                    });
+                    const systems = Array.from(systemCounts, ([system, count]) => ({ system, count }));
+                    const total = d3.sum(systems, d => d.count);
+                    return { date: new Date(date), systems, total };
+                }).sort((a,b) => a.date - b.date);
+
+                const systems = Object.keys(systemColors);
+                
+                const margin = {top: 30, right: 30, bottom: 40, left: 40};
+                const parentWidth = container.node().getBoundingClientRect().width;
+                const width = parentWidth > 0 ? parentWidth - margin.left - margin.right : 700;
+                const height = 400 - margin.top - margin.bottom;
+
+                const svg = container.append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+                
+                const x = d3.scaleBand()
+                    .domain(processedData.map(d => d.date))
+                    .range([0, width])
+                    .padding(0.2);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(processedData, d => d.total) || 1])
+                    .range([height, 0]);
+
+                const color = d3.scaleOrdinal()
+                    .domain(systems)
+                    .range(Object.values(systemColors));
+                
+                const stack = d3.stack()
+                    .keys(systems)
+                    .value((d, key) => {
+                        const systemData = d.systems.find(s => s.system === key);
+                        return systemData ? systemData.count : 0;
+                    });
+                
+                const series = stack(processedData);
+
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                        .attr("fill", d => color(d.key))
+                    .selectAll("rect")
+                    .data(d => d)
+                    .join("rect")
+                        .attr("x", d => x(d.data.date))
+                        .attr("y", d => y(d[1]))
+                        .attr("height", d => y(d[0]) - y(d[1]))
+                        .attr("width", x.bandwidth())
+                        .on("mouseover", (event, d) => {
+                            const systemName = d3.select(event.currentTarget.parentNode).datum().key;
+                            const count = d[1] - d[0];
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d3.timeFormat("%b %d, %Y")(d.data.date)}</b><br>${systemName}: ${count}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+                
+                // Add system counts inside bars
+                 svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                    .selectAll("text")
+                    .data(d => d)
+                    .join("text")
+                    .text(d => {
+                        const value = d[1] - d[0];
+                        return value > 0 ? value : "";
+                    })
+                    .attr("x", d => x(d.data.date) + x.bandwidth() / 2)
+                    .attr("y", d => y(d[1]) + (y(d[0]) - y(d[1])) / 2)
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "500");
+
+                // Add total counts above bars
+                svg.append("g")
+                    .selectAll("text")
+                    .data(processedData)
+                    .join("text")
+                    .text(d => d.total)
+                    .attr("x", d => x(d.date) + x.bandwidth() / 2)
+                    .attr("y", d => y(d.total) - 5)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#374151")
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "bold");
+                
+                svg.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%b %d")));
+                
+                svg.append("g")
+                    .call(d3.axisLeft(y).ticks(5).tickSize(0))
+                    .select(".domain").remove();
+
+                const legendContainer = document.getElementById('tickets-by-date-legend-container');
+                legendContainer.innerHTML = '';
+                systems.forEach(system => {
+                    const colorValue = systemColors[system];
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${colorValue}"></div>
+                        <span class="text-sm text-gray-600">${system}</span>
+                    `;
+                    legendContainer.appendChild(legendItem);
+                });
+            }
+
+
+            // --- INITIALIZE DASHBOARD & UPLOAD ---
+            updateAllVisualizations(issueData);
+
+            document.getElementById('csv-upload').addEventListener('change', event => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const csvText = e.target.result;
+                            const newData = d3.csvParse(csvText);
+                            if(newData.length === 0 || !newData[0].hasOwnProperty('ID')){
+                                alert('Invalid CSV format. Please ensure the file has the correct headers.');
+                                return;
+                            }
+                            issueData = newData;
+                            updateAllVisualizations(issueData);
+                        } catch (error) {
+                            console.error("Error parsing CSV:", error);
+                            alert("Failed to parse the CSV file. Please check the file format and try again.");
+                        }
+                    };
+                    reader.onerror = () => alert("Error reading the file.");
+                    reader.readAsText(file);
                 }
-                return newRow;
             });
-
-            const allKeys = new Set();
-            mappedData.forEach(row => Object.keys(row).forEach(key => allKeys.add(key)));
-            tableHeaders = [...standardOrder.filter(h => allKeys.has(h)), ...[...allKeys].filter(h => !standardOrder.includes(h))];
-            return mappedData;
-        };
-
-        const showIssueModal = (issue) => {
-            document.getElementById('modal-title').textContent = `[${issue.id || 'N/A'}] ${issue.summary || 'No Summary'}`;
-            const mainContent = document.getElementById('modal-main-content');
-            mainContent.innerHTML = ''; 
-            const detailsPanel = document.getElementById('modal-details-panel');
-            detailsPanel.innerHTML = '';
-            
-            const createDetailItem = (label, value, isTag = false, tagType = '') => {
-                const item = document.createElement('div');
-                item.className = 'flex flex-col mb-4';
-                item.innerHTML = `<span class="text-sm font-bold text-gray-500 uppercase tracking-wider">${label}</span><div class="mt-1 text-gray-800">${isTag ? renderTag(tagType, value) : (value || '<span class="text-gray-400 italic">N/A</span>')}</div>`;
-                return item;
-            };
-            
-            const standardDetailKeys = new Set(['status', 'priority', 'system', 'assignTo', 'createdDate', 'department', 'createdBy']);
-            
-            detailsPanel.appendChild(createDetailItem('Status', issue.status, true, 'status'));
-            detailsPanel.appendChild(createDetailItem('Priority', issue.priority, true, 'priority'));
-            detailsPanel.appendChild(createDetailItem('System', issue.system));
-            detailsPanel.appendChild(createDetailItem('Department', issue.department));
-            detailsPanel.appendChild(createDetailItem('Assignee', issue.assignTo));
-            detailsPanel.appendChild(createDetailItem('Reporter', issue.createdBy));
-            detailsPanel.appendChild(createDetailItem('Created Date', issue.createdDate));
-
-            let hasMainContent = false;
-            tableHeaders.forEach(key => {
-                 if (!standardDetailKeys.has(key) && key !== 'id' && key !== 'summary') {
-                    const contentItem = createDetailItem(key, issue[key]);
-                    mainContent.appendChild(contentItem);
-                    hasMainContent = true;
-                 }
-            });
-            if (!hasMainContent) mainContent.innerHTML = '<p class="text-gray-500 italic">No additional details provided.</p>';
-
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('.modal-container').classList.remove('scale-95');}, 10);
-        };
-        
-        const hideIssueModal = () => {
-            modal.classList.add('opacity-0');
-            modal.querySelector('.modal-container').classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        };
-
-        const handleFileUpload = (event) => {
-            const file = event.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                    if (jsonData && jsonData.length > 0) {
-                        issuesData = mapData(jsonData); 
-                        refreshUI(); 
-                        alert(`${issuesData.length} issues loaded successfully from ${file.name}!`);
-                    } else { alert('Could not find any data in the Excel file.'); }
-                } catch (error) { console.error("Error parsing file:", error); alert('Error parsing the file.'); }
-                event.target.value = '';
-            };
-            reader.readAsArrayBuffer(file);
-        };
-
-        const navigateToIssuesAndFilter = (filters) => {
-            document.getElementById('nav-all-issues').click();
-            document.getElementById('filter-status').value = filters.status || 'all';
-            document.getElementById('filter-system').value = filters.system || 'all';
-            document.getElementById('filter-priority').value = filters.priority || 'all';
-            document.getElementById('filter-department').value = filters.department || 'all';
-            document.getElementById('filter-assignee').value = filters.assignee || 'all';
-            document.getElementById('filter-reporter').value = filters.reporter || 'all';
-            document.getElementById('filter-distributor').value = filters.distributor || 'all';
-            processAndRenderTable();
-            document.getElementById('view-all-issues').scrollIntoView({ behavior: 'smooth' });
-        };
-        
-        const handleSortClick = (event) => {
-            const key = event.currentTarget.dataset.sort;
-            if (currentSort.key === key) currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            else { currentSort.key = key; currentSort.direction = 'asc'; }
-            updateSortIndicators();
-            processAndRenderTable();
-        };
-
-        const setupEventListeners = () => {
-            document.getElementById('nav-dashboard').addEventListener('click', () => {
-                document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('view-all-issues').classList.add('hidden');
-            });
-            document.getElementById('nav-all-issues').addEventListener('click', () => {
-                document.getElementById('view-dashboard').classList.add('hidden');
-                document.getElementById('view-all-issues').classList.remove('hidden');
-            });
-            fileUploadInput.addEventListener('change', handleFileUpload);
-            ['filter-status', 'filter-priority', 'filter-system', 'filter-department', 'filter-assignee', 'filter-reporter', 'filter-distributor'].forEach(id => {
-                document.getElementById(id).addEventListener('change', processAndRenderTable);
-            });
-            
-            modalCloseBtn.addEventListener('click', hideIssueModal);
-            modal.addEventListener('click', (e) => { if (e.target === modal) hideIssueModal(); });
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            refreshUI(); 
-            setupEventListeners();
         });
-
     </script>
 </body>
 </html>
