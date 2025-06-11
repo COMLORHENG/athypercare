@@ -34,8 +34,13 @@
         <!-- Header -->
         <header id="main-header" class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-gray-200/50">
             <div class="flex flex-col">
-                <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
-                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200/80 pt-4">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <h1 class="text-2xl font-bold text-gray-800 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
+                     <button id="view-all-issues-btn" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                        View All Issues
+                    </button>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200/80 pt-4 mt-4">
                     <div class="flex items-center gap-4 flex-shrink-0">
                          <p class="text-gray-500 text-sm font-medium">Total Issues</p>
                          <p id="total-issues" class="text-3xl font-bold text-gray-800">0</p>
@@ -50,11 +55,11 @@
             </div>
         </header>
 
-        <main>
+        <main id="dashboard-view">
             <!-- Issues by Status Section -->
             <section id="status-summary" class="mb-12">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Status Summary</h2>
-                <div id="status-cards-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div id="status-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                    <!-- Status cards will be dynamically inserted here -->
                 </div>
             </section>
@@ -94,13 +99,25 @@
     
             <!-- Divider -->
             <hr class="my-12 border-gray-200">
+
+            <!-- Issue Category Analysis Section -->
+            <section id="issue-category-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Issue Category Analysis</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div id="issue-category-chart-container" class="relative"></div>
+                    <div id="issue-category-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                </div>
+            </section>
+            
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
             
             <!-- Combined Charts Section -->
             <section id="combined-charts-summary" class="mb-12">
                  <h2 class="text-2xl font-semibold text-gray-700 mb-6">Visual Analysis</h2>
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
                     <!-- Issue Reporter Section -->
-                    <div class="xl:col-span-1">
+                    <div class="lg:col-span-1">
                         <div class="bg-white p-6 rounded-xl shadow-md h-full">
                             <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Issue Reporter</h3>
                             <div id="reporter-chart-container" class="flex flex-col items-center justify-center gap-8">
@@ -109,7 +126,7 @@
                          </div>
                     </div>
                     <!-- Tickets by Date Section -->
-                    <div class="xl:col-span-1">
+                    <div class="lg:col-span-1">
                         <div class="bg-white p-6 rounded-xl shadow-md h-full">
                             <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Tickets by Date</h3>
                             <div id="tickets-by-date-chart-container" class="relative"></div>
@@ -117,7 +134,7 @@
                         </div>
                     </div>
                      <!-- Issues by Distributor Section -->
-                     <div class="xl:col-span-1">
+                     <div class="lg:col-span-1">
                          <div class="bg-white p-6 rounded-xl shadow-md h-full">
                             <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Distributors</h3>
                             <div id="distributor-chart-container" class="relative overflow-x-auto"></div>
@@ -142,6 +159,11 @@
                 <p class="text-xs text-gray-500 mt-3">Uploading a new file will refresh all dashboard visualizations.</p>
             </section>
         </main>
+
+        <div id="issues-list-view" class="hidden">
+             <!-- Issue List View will be rendered here -->
+        </div>
+
     </div>
 
     <script>
@@ -249,6 +271,7 @@
                 renderDistributorChart(currentData);
                 renderReporterChart(currentData);
                 renderTicketsByDateChart(currentData);
+                renderIssueCategoryChart(currentData);
             }
 
             // --- RENDER STICKY HEADER ---
@@ -293,19 +316,19 @@
                         badgesHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${systemCountsInStatus[system]}</span>`;
                     });
                     container.innerHTML += `
-                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center justify-between border-l-4 border-${style.color}-500">
-                            <div>
-                                <p class="text-gray-500 text-sm font-medium">${status}</p>
-                                <p class="text-3xl font-bold text-gray-800">${count}</p>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="flex flex-wrap gap-1 justify-end max-w-[160px]">
-                                    ${badgesHTML}
+                        <div class="bg-white p-4 rounded-xl shadow-md flex flex-col justify-between border-l-4 border-${style.color}-500 h-full">
+                           <div>
+                                <div class="flex items-center justify-between mb-4">
+                                     <h3 class="font-bold text-gray-800">${status}</h3>
+                                     <div class="bg-${style.color}-100 rounded-full p-2">
+                                        <i class="${style.icon} text-${style.color}-500 text-lg fa-fw"></i>
+                                    </div>
                                 </div>
-                                <div class="bg-${style.color}-100 rounded-full p-3 flex-shrink-0">
-                                    <i class="${style.icon} text-${style.color}-500 text-2xl fa-fw"></i>
-                                </div>
-                            </div>
+                                <p class="text-4xl font-bold text-gray-800">${count}</p>
+                           </div>
+                           <div class="flex flex-wrap gap-1 mt-4">
+                                ${badgesHTML}
+                           </div>
                         </div>
                     `;
                 });
@@ -359,16 +382,20 @@
                     });
                     statusHTML += '</div>';
                     container.innerHTML += `
-                        <div class="bg-white p-6 rounded-xl shadow-md">
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center gap-3">
-                                    <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
-                                    <h3 class="font-bold text-gray-800">${deptName}</h3>
+                        <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
+                           <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-3">
+                                        <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                        <h3 class="font-bold text-gray-800">${deptName}</h3>
+                                    </div>
+                                    <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
                                 </div>
-                                <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                                ${total > 0 ? systemBadgesHTML : ''}
                             </div>
-                            ${total > 0 ? systemBadgesHTML : ''}
-                            ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                            <div class="mt-auto">
+                                ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                            </div>
                         </div>
                     `;
                 });
@@ -544,8 +571,7 @@
                 const height = processedData.length * 50;
 
                 const svg = container.append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
+                    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
                     .append("g")
                     .attr("transform", `translate(${margin.left},${margin.top})`);
                 
@@ -729,13 +755,13 @@
                     .attr('class', 'grid grid-cols-2 gap-x-6 gap-y-3');
                 
                 processedData.forEach((d, i) => {
-                    const legendItem = legendContainer.append('div').attr('class', 'flex items-center');
-                    legendItem.append('div')
-                        .attr('class', 'w-4 h-4 rounded-sm mr-2')
-                        .style('background-color', color(i));
-                    legendItem.append('span')
-                        .attr('class', 'text-sm text-gray-700')
-                        .text(`${d.name} (${d.count})`);
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${color(i)}"></div>
+                        <span class="text-sm text-gray-700">${d.name} (${d.count})</span>
+                    `;
+                    legendContainer.node().appendChild(legendItem);
                 });
             }
             
@@ -869,6 +895,128 @@
                     `;
                     legendContainer.appendChild(legendItem);
                 });
+            }
+
+             // --- RENDER ISSUE CATEGORY ANALYSIS CHART ---
+            function renderIssueCategoryChart(data) {
+                const container = d3.select("#issue-category-chart-container");
+                container.html("");
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+
+                const categoryData = d3.group(data, d => d["Issue Category"], d => d.System);
+                
+                const processedData = Array.from(categoryData, ([category, systems]) => {
+                     if (!category) return null;
+                    const systemCounts = Array.from(systems, ([system, issues]) => ({ system, count: issues.length }));
+                    const total = d3.sum(systemCounts, d => d.count);
+                    return { category, systems: systemCounts, total };
+                }).filter(Boolean).sort((a,b) => b.total - a.total);
+
+                const allSystems = [...new Set(data.map(d => d.System).filter(Boolean))];
+
+                const margin = {top: 20, right: 40, bottom: 40, left: 250};
+                const parentWidth = container.node().getBoundingClientRect().width;
+                const width = parentWidth > 0 ? parentWidth - margin.left - margin.right : 700;
+                const height = processedData.length * 50;
+
+                const svg = container.append("svg")
+                    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const y = d3.scaleBand()
+                    .domain(processedData.map(d => d.category))
+                    .range([0, height])
+                    .padding(0.3);
+
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(processedData, d => d.total) || 1])
+                    .range([0, width]);
+                
+                const color = d3.scaleOrdinal(d3.schemePaired).domain(allSystems);
+
+                const stack = d3.stack()
+                    .keys(allSystems)
+                    .value((d, key) => {
+                        const systemData = d.systems.find(sys => sys.system === key);
+                        return systemData ? systemData.count : 0;
+                    });
+
+                const series = stack(processedData);
+
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                        .attr("fill", d => color(d.key))
+                    .selectAll("rect")
+                    .data(d => d)
+                    .join("rect")
+                        .attr("y", d => y(d.data.category))
+                        .attr("x", d => x(d[0]))
+                        .attr("width", d => x(d[1]) - x(d[0]))
+                        .attr("height", y.bandwidth())
+                        .on("mouseover", (event, d) => {
+                            const systemName = d3.select(event.currentTarget.parentNode).datum().key;
+                            const count = d[1] - d[0];
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d.data.category}</b><br>${systemName}: ${count}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+                        
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                    .selectAll("text")
+                    .data(d => d)
+                    .join("text")
+                    .text(d => {
+                        const value = d[1] - d[0];
+                        const percentage = (value / d.data.total) * 100;
+                        return percentage > 5 ? `${percentage.toFixed(0)}%` : "";
+                    })
+                    .attr("x", d => x(d[0]) + (x(d[1]) - x(d[0])) / 2)
+                    .attr("y", d => y(d.data.category) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "500");
+
+                svg.append("g")
+                    .selectAll("text")
+                    .data(processedData)
+                    .join("text")
+                    .text(d => d.total)
+                    .attr("x", d => x(d.total) + 8)
+                    .attr("y", d => y(d.category) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("fill", "#1f2937")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "bold");
+
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSize(0))
+                    .select(".domain").remove();
+
+                const legendContainer = document.getElementById('issue-category-legend-container');
+                legendContainer.innerHTML = '';
+                allSystems.forEach(system => {
+                    const colorValue = color(system);
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${colorValue}"></div>
+                        <span class="text-sm text-gray-600">${system}</span>
+                    `;
+                    legendContainer.appendChild(legendItem);
+                });
+
             }
 
 
