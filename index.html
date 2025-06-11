@@ -6,7 +6,6 @@
     <title>Issue Tracker Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -38,24 +37,21 @@
     <div id="dashboard-content" class="container mx-auto p-4 md:p-8">
 
         <!-- Header -->
-        <header id="main-header" class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-gray-200/50">
+        <header id="main-header" class="sticky top-4 z-50 bg-white/80 backdrop-blur-lg p-3 rounded-2xl shadow-xl border border-gray-200/50 mb-8">
             <div class="flex flex-col">
-                 <div class="flex flex-wrap justify-between items-center gap-4">
-                    <h1 class="text-2xl font-bold text-gray-800 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
-                     <button id="view-all-issues-btn" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
-                        View All Issues
-                    </button>
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <h1 class="text-lg font-bold text-gray-800 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200/80 pt-4 mt-4">
-                    <div class="flex items-center gap-4 flex-shrink-0">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gray-200/80 pt-2 mt-2">
+                    <div class="flex items-center gap-2 flex-shrink-0">
                          <p class="text-gray-500 text-sm font-medium">Total Issues</p>
-                         <p id="total-issues" class="text-3xl font-bold text-gray-800">0</p>
+                         <p id="total-issues" class="text-5xl font-bold text-blue-600">0</p>
                     </div>
                     <div id="system-badges-container" class="flex flex-wrap gap-2 justify-center sm:justify-end flex-grow">
                         <!-- Badges for total issues will be inserted here by JS -->
                     </div>
                 </div>
-                <div id="timestamp-container" class="w-full text-right text-xs text-gray-400 mt-4">
+                <div id="timestamp-container" class="w-full text-right text-xs text-gray-400 mt-2">
                     <!-- Timestamp will be inserted here by JS -->
                 </div>
             </div>
@@ -76,14 +72,29 @@
             <!-- Issues by Department Section -->
             <section id="department-summary" class="mb-12">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Department Summary</h2>
-                <div id="department-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Department cards will be dynamically inserted here -->
+                <div class="overflow-x-auto pb-4">
+                    <div id="department-cards-container" class="flex flex-nowrap gap-6">
+                        <!-- Department cards will be dynamically inserted here -->
+                    </div>
                 </div>
             </section>
     
             <!-- Divider -->
             <hr class="my-12 border-gray-200">
     
+            <!-- Issues by System Section -->
+            <section id="system-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">System</h2>
+                 <div class="overflow-x-auto pb-4">
+                    <div id="system-cards-container" class="flex flex-nowrap gap-6">
+                        <!-- System cards will be dynamically inserted here -->
+                    </div>
+                </div>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+            
             <!-- Issues by Priority Section -->
             <section id="priority-summary" class="mb-12">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Priority</h2>
@@ -92,17 +103,6 @@
                 </div>
             </section>
             
-            <!-- Divider -->
-            <hr class="my-12 border-gray-200">
-    
-            <!-- Issues by System Section -->
-            <section id="system-summary" class="mb-12">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6">System</h2>
-                <div id="system-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- System cards will be dynamically inserted here -->
-                </div>
-            </section>
-    
             <!-- Divider -->
             <hr class="my-12 border-gray-200">
 
@@ -157,43 +157,12 @@
                     <span>Upload New CSV Data</span>
                 </label>
                 <input type="file" id="csv-upload" class="hidden" accept=".csv">
-                
-                <button id="generate-pdf-btn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg cursor-pointer hover:bg-green-700 transition-transform transform hover:scale-105 inline-flex items-center gap-2 ml-4">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Generate PDF</span>
-                </button>
-                <p class="text-xs text-gray-500 mt-3">Uploading a new file will refresh all dashboard visualizations.</p>
             </section>
         </main>
-
-        <div id="issues-list-view" class="hidden">
-             <!-- Issue List View will be rendered here -->
-        </div>
-
     </div>
 
     <script>
-        let issueData = [
-            { "ID": 12, "Status": "Testing", "Summary": "Data from Power BI vs Print Invoice of JDE system show different", "System": "Power BI", "Description": "Different Unit Price, Discount %, Discount Amount. \n\nNeed Clarify with JDE team to support on this", "Assign To": "Dana Chhun", "Department": "Tax", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "Created By": "Virak Prom", "CreatedDate": "6/4/2025 12:51 PM", "Modified": "6/6/2025 12:04 PM", "Modified By": "Dana Chhun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": "Danish Kokkarani" },
-            { "ID": 19, "Status": "Testing", "Summary": "missing data of one distributor ( Everflow )", "System": "Power BI", "Description": "it’s missing data of one distributor ( Everflow ). Due to need enable configuration at backend Data Prime to pull data from BC system.", "Assign To": "Virak Prom", "Department": "OtC", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "Created By": "Virak Prom", "CreatedDate": "6/6/2025 6:44 AM", "Modified": "6/6/2025 11:14 AM", "Modified By": "Virak Prom", "Did we test in UAT?": "Yes", "Impacted Distributor": "EVERFLOW DISTRIBUTOR CO., LTD.", "Support PIC": "Kinneth Chhorn" },
-            { "ID": 20, "Status": "Testing", "Summary": "HCAM - Distributor Payment report", "System": "Power BI", "Description": "It need verify and confirm from Owner report", "Assign To": "Sophal Srun", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Virak Prom", "CreatedDate": "6/6/2025 8:29 AM", "Modified": "6/6/2025 8:59 AM", "Modified By": "Virak Prom", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": "Pichleakhena Moul" },
-            { "ID": 21, "Status": "Testing", "Summary": "HCAM - DIS BI report", "System": "Power BI", "Description": "It need verify and confirm OTC related DIS data from new model", "Assign To": "Sophal Srun", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Virak Prom", "CreatedDate": "6/6/2025 8:33 AM", "Modified": "6/6/2025 8:58 AM", "Modified By": "Virak Prom", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 13, "Status": "Ready To Test", "Summary": "gR in  \" order list view \" not extract excel ", "System": "glassRUN", "Description": "Dear Team, \n\ncurrently, gR in the module \" Order List View \" does not function to extract Excel.\nplease check the attached.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Reaksa Ban", "CreatedDate": "6/5/2025 10:36 AM", "Modified": "6/6/2025 6:16 AM", "Modified By": "Kimleang Ngoun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 1, "Status": "Closed", "Summary": "User cannot login to JDE", "System": "JDE", "Description": "When user key in user and password, it show error as incorrect password.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:00 AM", "Modified": "6/2/2025 9:30 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 2, "Status": "Closed", "Summary": "User cannot print invoice", "System": "JDE", "Description": "After user click on print button, nothing come out from printer.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:05 AM", "Modified": "6/2/2025 9:45 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 3, "Status": "Closed", "Summary": "Invoice printed with wrong amount", "System": "JDE", "Description": "The total amount in the invoice is incorrect. It should be $100 but it is $1,000.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:10 AM", "Modified": "6/2/2025 10:00 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 4, "Status": "Closed", "Summary": "System is very slow", "System": "JDE", "Description": "User has to wait for 5 minutes to open a new screen.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P2", "Impact": "Medium", "Urgency": "Medium", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:15 AM", "Modified": "6/2/2025 10:15 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 5, "Status": "Closed", "Summary": "Cannot create new customer", "System": "JDE", "Description": "When user click on \"Create\" button, it show error message \"Invalid customer ID\".", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P1", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/2/2025 9:20 AM", "Modified": "6/2/2025 10:30 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 6, "Status": "In Progress", "Summary": "Data is not updated in Power BI", "System": "Power BI", "Description": "The sales data in Power BI is not showing the latest data from yesterday.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:00 AM", "Modified": "6/3/2025 10:30 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 7, "Status": "In Progress", "Summary": "Cannot access shared folder", "System": "Other", "Description": "User cannot access the shared folder to get the report.", "Assign To": "Visal Chan", "Department": "IT", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:05 AM", "Modified": "6/3/2025 10:45 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 8, "Status": "Open", "Summary": "Request for new report", "System": "Power BI", "Description": "User wants a new report to show sales by product category.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:10 AM", "Modified": "6/3/2025 11:00 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 9, "Status": "Open", "Summary": "Wrong email address in the system", "System": "JDE", "Description": "The email address of customer A is incorrect.", "Assign To": "Visal Chan", "Department": "Finance", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Sreylin Chum", "CreatedDate": "6/3/2025 10:15 AM", "Modified": "6/3/2025 11:15 AM", "Modified By": "Visal Chan", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 10, "Status": "On Hold", "Summary": "Need to clarify the requirement", "System": "Power BI", "Description": "The requirement for the new report is not clear.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:20 AM", "Modified": "6/3/2025 11:30 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 11, "Status": "Canceled", "Summary": "No need this report anymore", "System": "Power BI", "Description": "User has found another report that can be used.", "Assign To": "Danish Kokkarani", "Department": "OtC", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "Created By": "Pichleakhena Moul", "CreatedDate": "6/3/2025 10:25 AM", "Modified": "6/3/2025 11:45 AM", "Modified By": "Danish Kokkarani", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 14, "Status": "In Progress", "Summary": "gR in\" Order Header\" cannot edit", "System": "glassRUN", "Description": "Dear Team, \n\ncurrently, gR in \" Order Header\" cannot edit \nplease check it.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Reaksa Ban", "CreatedDate": "6/5/2025 10:38 AM", "Modified": "6/5/2025 11:00 AM", "Modified By": "Kimleang Ngoun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 15, "Status": "In Progress", "summary": "gR in \" order detail \" have some item have not show price.", "System": "glassRUN", "Description": "Dear Team,\n\ncurrently, gR in \" Order detail \" have some item that does not show the price.\nplease check the attached.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "Created By": "Reaksa Ban", "CreatedDate": "6/5/2025 10:40 AM", "Modified": "6/5/2025 11:05 AM", "Modified By": "Kimleang Ngoun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null },
-            { "ID": 16, "Status": "New", "Summary": "New distributor code from BC not flow to JDE", "System": "JDE", "Description": "New distributor code from BC not flow to JDE", "Assign To": "Sophal Srun", "Department": "Finance", "Priority": "P2", "Impact": "High", "Urgency": "High", "Created By": "Sreylin Chum", "CreatedDate": "6/5/2025 11:00 AM", "Modified": "6/5/2025 11:20 AM", "Modified By": "Sophal Srun", "Did we test in UAT?": "No", "Impacted Distributor": "All Distributors", "Support PIC": "Sophorn Huy" }
-        ];
+        let issueData = [];
 
         // --- DATA PROCESSING AND RENDERING ---
 
@@ -203,30 +172,27 @@
                 "glassRUN": "#10B981",
                 "JDE":      "#3B82F6",
                 "DIS":      "#F59E0B",
-                "Power BI": "#14B8A6",
+                "Power BI": "#F97316",
                 "SEM":      "#D946EF",
-                "DOT":      "#8B5CF6",
-                "Other":    "#64748B"
+                "DOT":      "#8B5CF6"
             };
 
             const systemColorClasses = {
                  "glassRUN": "bg-green-50 text-green-700 border border-green-400",
                 "JDE":      "bg-blue-50 text-blue-700 border border-blue-400",
                 "DIS":      "bg-amber-50 text-amber-700 border border-amber-400",
-                "Power BI": "bg-teal-50 text-teal-700 border border-teal-400",
+                "Power BI": "bg-orange-50 text-orange-700 border border-orange-400",
                 "SEM":      "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-400",
-                "DOT":      "bg-violet-50 text-violet-700 border border-violet-400",
-                "Other":    "bg-slate-50 text-slate-700 border border-slate-400"
+                "DOT":      "bg-violet-50 text-violet-700 border border-violet-400"
             }
             
             const systemStyling = {
                 "glassRUN": { icon: "fa-solid fa-layer-group", color: "text-green-500" },
                 "JDE":      { icon: "fa-solid fa-database", color: "text-blue-500" },
                 "DIS":      { icon: "fa-solid fa-chart-pie", color: "text-amber-500" },
-                "Power BI": { icon: "fa-solid fa-chart-simple", color: "text-teal-500" },
+                "Power BI": { icon: "fa-solid fa-chart-simple", color: "text-orange-500" },
                 "SEM":      { icon: "fa-solid fa-magnifying-glass-chart", color: "text-fuchsia-500" },
-                "DOT":      { icon: "fa-solid fa-circle-nodes", color: "text-violet-500" },
-                "Other":    { icon: "fa-solid fa-question-circle", color: "text-slate-500" }
+                "DOT":      { icon: "fa-solid fa-circle-nodes", color: "text-violet-500" }
             };
 
             const statusMap = {
@@ -259,8 +225,7 @@
                 "RTR":         { icon: "fa-solid fa-chart-line", color: "text-sky-500" },
                 "Procurement": { icon: "fa-solid fa-cart-shopping", color: "text-pink-500" },
                 "Finance":     { icon: "fa-solid fa-piggy-bank", color: "text-lime-500" },
-                "IT":          { icon: "fa-solid fa-desktop", color: "text-indigo-500" },
-                "Other":       { icon: "fa-solid fa-building-user", color: "text-slate-500" }
+                "IT":          { icon: "fa-solid fa-desktop", color: "text-indigo-500" }
             };
 
             const priorityStyles = {
@@ -269,7 +234,7 @@
                 "P3": { name: "Medium",   icon: "fa-solid fa-equals",              color: "amber" },
                 "P4": { name: "Low",      icon: "fa-solid fa-arrow-down",          color: "sky" }
             };
-            
+
             function updateAllVisualizations(currentData) {
                 renderStickyHeader(currentData);
                 renderStatusSummary(currentData);
@@ -286,8 +251,9 @@
             function renderStickyHeader(data) {
                 document.getElementById('total-issues').textContent = data.length;
                 const totalSystemCounts = data.reduce((acc, issue) => {
-                    const systemKey = systemColorClasses.hasOwnProperty(issue.System) ? issue.System : "Other";
-                    acc[systemKey] = (acc[systemKey] || 0) + 1;
+                    if (systemColorClasses.hasOwnProperty(issue.System)) {
+                        acc[issue.System] = (acc[issue.System] || 0) + 1;
+                    }
                     return acc;
                 }, {});
                 const totalBadgeContainer = document.getElementById('system-badges-container');
@@ -315,8 +281,9 @@
                     const style = statusStyles[status] || statusStyles["Uncategorized"];
                     const issuesInStatus = data.filter(issue => (statusMap[issue.Status] || "Uncategorized") === status);
                     const systemCountsInStatus = issuesInStatus.reduce((acc, issue) => {
-                        const systemKey = systemColorClasses.hasOwnProperty(issue.System) ? issue.System : "Other";
-                        acc[systemKey] = (acc[systemKey] || 0) + 1;
+                         if (systemColorClasses.hasOwnProperty(issue.System)) {
+                            acc[issue.System] = (acc[issue.System] || 0) + 1;
+                         }
                         return acc;
                     }, {});
                     let badgesHTML = '';
@@ -346,7 +313,7 @@
             function renderDepartmentSummary(data) {
                 const departmentData = data.reduce((acc, issue) => {
                     const dept = issue.Department;
-                     if (!dept) return acc;
+                     if (!dept || !departmentStyling[dept]) return acc;
                     if (!acc[dept]) acc[dept] = [];
                     acc[dept].push(issue);
                     return acc;
@@ -357,15 +324,16 @@
                 Object.keys(departmentData).sort().forEach(deptName => {
                     const issuesInDept = departmentData[deptName];
                     const total = issuesInDept.length;
-                    const style = departmentStyling[deptName] || departmentStyling["Other"];
+                    const style = departmentStyling[deptName];
                     const statuses = issuesInDept.reduce((acc, issue) => {
                         const mappedStatus = statusMap[issue.Status] || "Uncategorized";
                         acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
                         return acc;
                     }, {});
                     const systems = issuesInDept.reduce((acc, issue) => {
-                         const systemKey = systemColorClasses.hasOwnProperty(issue.System) ? issue.System : "Other";
-                         acc[systemKey] = (acc[systemKey] || 0) + 1;
+                         if (systemColorClasses.hasOwnProperty(issue.System)) {
+                            acc[issue.System] = (acc[issue.System] || 0) + 1;
+                         }
                          return acc;
                     }, {});
                     let systemBadgesHTML = '<div class="flex flex-wrap gap-2 mt-4">';
@@ -377,7 +345,7 @@
                     const sortedStatuses = Object.keys(statuses).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
                     sortedStatuses.forEach(statusName => {
                         const count = statuses[statusName];
-                        const statusStyle = statusStyles[statusName] || statusStyles['Default'];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Uncategorized'];
                         statusHTML += `
                             <div class="flex items-center justify-between text-sm">
                                 <div class="flex items-center">
@@ -390,16 +358,20 @@
                     });
                     statusHTML += '</div>';
                     container.innerHTML += `
-                        <div class="bg-white p-6 rounded-xl shadow-md">
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center gap-3">
-                                    <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
-                                    <h3 class="font-bold text-gray-800">${deptName}</h3>
+                        <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
+                           <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-3">
+                                        <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                        <h3 class="font-bold text-gray-800">${deptName}</h3>
+                                    </div>
+                                    <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
                                 </div>
-                                <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                                ${total > 0 ? systemBadgesHTML : ''}
                             </div>
-                            ${total > 0 ? systemBadgesHTML : ''}
-                            ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                            <div class="mt-auto">
+                                ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                            </div>
                         </div>
                     `;
                 });
@@ -421,15 +393,19 @@
                     const style = priorityStyles[priorityKey];
                     const total = issues.length;
                     const systemCounts = issues.reduce((acc, issue) => {
-                        acc[issue.System] = (acc[issue.System] || 0) + 1;
+                        if (systemColorClasses.hasOwnProperty(issue.System)) {
+                           acc[issue.System] = (acc[issue.System] || 0) + 1;
+                        }
                         return acc;
                     }, {});
                     let systemsHTML = '';
                      Object.keys(systemCounts).sort().forEach(sys => {
-                        systemsHTML += `<span class="${systemColorClasses[sys] || systemColorClasses['Other']} text-xs font-semibold px-2 py-1 rounded-full">${sys} (${systemCounts[sys]})</span>`;
+                        systemsHTML += `<span class="${systemColorClasses[sys]} text-xs font-semibold px-2 py-1 rounded-full">${sys} (${systemCounts[sys]})</span>`;
                     });
                     const deptCounts = issues.reduce((acc, issue) => {
-                        acc[issue.Department] = (acc[issue.Department] || 0) + 1;
+                       if (departmentStyling.hasOwnProperty(issue.Department)) {
+                           acc[issue.Department] = (acc[issue.Department] || 0) + 1;
+                        }
                         return acc;
                     }, {});
                     let deptsHTML = '';
@@ -445,7 +421,7 @@
                     const sortedStatuses = Object.keys(statusCounts).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
                     sortedStatuses.forEach(statusName => {
                         const count = statusCounts[statusName];
-                        const statusStyle = statusStyles[statusName] || statusStyles['Default'];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Uncategorized'];
                         statusHTML += `
                             <div class="flex items-center justify-between text-sm">
                                 <div class="flex items-center">
@@ -484,10 +460,9 @@
             function renderSystemSummary(data) {
                 const systemGroups = data.reduce((acc, issue) => {
                     const system = issue.System;
-                    if (!system) return acc;
-                    const systemKey = systemColorClasses.hasOwnProperty(system) ? system : "Other";
-                    if (!acc[systemKey]) acc[systemKey] = [];
-                    acc[systemKey].push(issue);
+                    if (!system || !systemStyling[system]) return acc;
+                    if (!acc[system]) acc[system] = [];
+                    acc[system].push(issue);
                     return acc;
                 }, {});
 
@@ -508,7 +483,7 @@
                     const sortedStatuses = Object.keys(statusCounts).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
                     sortedStatuses.forEach(statusName => {
                         const count = statusCounts[statusName];
-                        const statusStyle = statusStyles[statusName] || statusStyles['Default'];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Uncategorized'];
                         statusHTML += `
                             <div class="flex items-center justify-between text-sm">
                                 <div class="flex items-center">
@@ -533,7 +508,7 @@
                     priorityHTML += '</div></div>';
 
                     container.innerHTML += `
-                        <div class="bg-white p-6 rounded-xl shadow-md h-full flex flex-col">
+                        <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
                            <div class="flex-grow">
                                 <div class="flex justify-between items-start">
                                     <div class="flex items-center gap-3">
@@ -993,7 +968,7 @@
                     .attr("dy", "0.35em")
                     .attr("text-anchor", "middle")
                     .attr("fill", "white")
-                    .attr("font-size", "12px")
+                    .attr("font-size", "14px")
                     .attr("font-weight", "500");
 
                 svg.append("g")
@@ -1053,35 +1028,6 @@
                     reader.onerror = () => alert("Error reading the file.");
                     reader.readAsText(file);
                 }
-            });
-
-            document.getElementById('generate-pdf-btn').addEventListener('click', () => {
-                const { jsPDF } = window.jspdf;
-                const content = document.getElementById('dashboard-content');
-                
-                html2canvas(content, { scale: 2, windowWidth: content.scrollWidth, windowHeight: content.scrollHeight }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF('p', 'mm', 'a4');
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    const canvasWidth = canvas.width;
-                    const canvasHeight = canvas.height;
-                    const ratio = canvasHeight / canvasWidth;
-                    let imgHeight = pdfWidth * ratio;
-                    let heightLeft = imgHeight;
-                    let position = 0;
-
-                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-                    heightLeft -= pdfHeight;
-
-                    while (heightLeft > 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-                        heightLeft -= pdfHeight;
-                    }
-                    pdf.save('dashboard-report.pdf');
-                });
             });
         });
     </script>
