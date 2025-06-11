@@ -25,6 +25,12 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
+        #issues-table th {
+            position: sticky;
+            top: 0;
+            background-color: #f3f4f6;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -34,7 +40,7 @@
         <!-- Header -->
         <header id="main-header" class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-gray-200/50">
             <div class="flex flex-col">
-                <div class="flex flex-wrap justify-between items-center gap-4">
+                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <h1 class="text-2xl font-bold text-gray-800 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
                      <button id="view-all-issues-btn" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
                         View All Issues
@@ -59,7 +65,7 @@
             <!-- Issues by Status Section -->
             <section id="status-summary" class="mb-12">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Status Summary</h2>
-                <div id="status-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <div id="status-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6">
                    <!-- Status cards will be dynamically inserted here -->
                 </div>
             </section>
@@ -230,7 +236,8 @@
                 "Ready To Test": "Ready To Test", 
                 "Testing": "Testing", 
                 "Closed": "Closed", 
-                "Canceled": "Closed" 
+                "Canceled": "Closed",
+                "Out Of Scope": "Out Of Scope"
             };
             
             const statusStyles = {
@@ -240,7 +247,8 @@
                 "Ready To Test":{ order: 4, icon: "fa-solid fa-flag-checkered",color: "cyan" },
                 "Testing":      { order: 5, icon: "fa-solid fa-vial",          color: "teal" },
                 "Closed":       { order: 6, icon: "fa-solid fa-circle-check",  color: "green" },
-                "Uncategorized": { order: 7, icon: "fa-solid fa-question-circle", color: "gray" }
+                "Out Of Scope": { order: 7, icon: "fa-solid fa-ban",           color: "gray" },
+                "Uncategorized": { order: 8, icon: "fa-solid fa-question-circle", color: "gray" }
             };
 
             const departmentStyling = {
@@ -261,7 +269,7 @@
                 "P3": { name: "Medium",   icon: "fa-solid fa-equals",              color: "amber" },
                 "P4": { name: "Low",      icon: "fa-solid fa-arrow-down",          color: "sky" }
             };
-
+            
             function updateAllVisualizations(currentData) {
                 renderStickyHeader(currentData);
                 renderStatusSummary(currentData);
@@ -382,20 +390,16 @@
                     });
                     statusHTML += '</div>';
                     container.innerHTML += `
-                        <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
-                           <div class="flex-grow">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex items-center gap-3">
-                                        <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
-                                        <h3 class="font-bold text-gray-800">${deptName}</h3>
-                                    </div>
-                                    <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                        <div class="bg-white p-6 rounded-xl shadow-md">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                    <h3 class="font-bold text-gray-800">${deptName}</h3>
                                 </div>
-                                ${total > 0 ? systemBadgesHTML : ''}
+                                <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
                             </div>
-                            <div class="mt-auto">
-                                ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
-                            </div>
+                            ${total > 0 ? systemBadgesHTML : ''}
+                            ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
                         </div>
                     `;
                 });
@@ -529,16 +533,20 @@
                     priorityHTML += '</div></div>';
 
                     container.innerHTML += `
-                        <div class="bg-white p-6 rounded-xl shadow-md">
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center gap-3">
-                                    <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
-                                    <h3 class="font-bold text-gray-800">${systemName}</h3>
+                        <div class="bg-white p-6 rounded-xl shadow-md h-full flex flex-col">
+                           <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-3">
+                                        <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                        <h3 class="font-bold text-gray-800">${systemName}</h3>
+                                    </div>
+                                    <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
                                 </div>
-                                <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
-                            </div>
-                             ${total > 0 ? priorityHTML : ''}
-                            ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                                 ${total > 0 ? priorityHTML : ''}
+                           </div>
+                           <div class="mt-auto">
+                                ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                           </div>
                         </div>
                     `;
                 });
@@ -998,7 +1006,7 @@
                     .attr("dy", "0.35em")
                     .attr("fill", "#1f2937")
                     .attr("font-size", "14px")
-                    .attr("font-weight", "bold");
+                    .attr("font-weight", "600");
 
                 svg.append("g")
                     .call(d3.axisLeft(y).tickSize(0))
