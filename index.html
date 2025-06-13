@@ -1,321 +1,1177 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
-import { TrendingUp, FilePlus2, UploadCloud, AlertCircle } from 'lucide-react';
-
-// This component now shows three charts side-by-side.
-// The PapaParse library for parsing is loaded dynamically.
-
-// Initial placeholder data (will be replaced by uploaded data)
-const initialTicketData = [
-    { id: 12, status: 'Ready To Test', system: 'Power BI', createdDate: '2025-06-01', resolvedDate: '2025-06-03' },
-    { id: 13, status: 'Closed', system: 'glassRUN', createdDate: '2025-06-01', resolvedDate: '2025-06-02' },
-    { id: 14, status: 'Closed', system: 'glassRUN', createdDate: '2025-06-02', resolvedDate: '2025-06-04' },
-    { id: 15, status: 'Closed', system: 'JDE', createdDate: '2025-06-02', resolvedDate: '2025-06-05' },
-    { id: 16, status: 'Ready To Test', system: 'JDE', createdDate: '2025-06-03', resolvedDate: '2025-06-06' },
-    { id: 17, status: 'Closed', system: 'Power BI', createdDate: '2025-06-03', resolvedDate: '2025-06-03' },
-    { id: 18, status: 'Closed', system: 'DIS', createdDate: '2025-06-04', resolvedDate: '2025-06-07' },
-];
-
-// Define a color palette for the systems.
-const SYSTEM_COLORS = ['#60a5fa', '#3b82f6', '#1d4ed8', '#1e3a8a', '#ef4444', '#f97316', '#8b5cf6', '#ec4899'];
-
-// Helper function to format dates for the chart axis
-const formatDate = (date) => {
-    if (!date || isNaN(new Date(date))) return "Invalid Date";
-    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
-
-// A custom label component for the top of the bars.
-const renderCustomizedLabel = (props) => {
-    const { x, y, width, value } = props;
-    if (value > 0) {
-        return (
-            <text x={x + width / 2} y={y} dy={-4} fill="#6b7280" fontSize={12} textAnchor="middle">
-                {value}
-            </text>
-        );
-    }
-    return null;
-};
-
-
-export default function App() {
-    const [createdChartData, setCreatedChartData] = useState([]);
-    const [resolvedChartData, setResolvedChartData] = useState([]);
-    const [comparisonChartData, setComparisonChartData] = useState([]);
-    const [totals, setTotals] = useState({ created: 0, resolved: 0, open: 0 });
-    const [fileName, setFileName] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
-    const [systems, setSystems] = useState([]);
-    const [colorMapping, setColorMapping] = useState({});
-
-    useEffect(() => {
-        const scriptId = 'papaparse-script';
-        if (document.getElementById(scriptId)) return;
-        
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js";
-        script.async = true;
-        document.body.appendChild(script);
-
-        return () => {
-            const scriptElement = document.getElementById(scriptId);
-            if (scriptElement) document.body.removeChild(scriptElement);
-        };
-    }, []);
-
-    // This function processes ticket data to create stats for all three charts.
-    const processTicketData = (tickets) => {
-        const dailyCreatedStats = {};
-        const dailyResolvedStats = {};
-        const dailyComparisonStats = {};
-        let totalCreated = 0;
-        let totalResolved = 0;
-
-        const uniqueSystems = [...new Set(tickets.map(t => t.system).filter(Boolean))];
-        const colors = {};
-        uniqueSystems.forEach((sys, i) => {
-            colors[sys] = SYSTEM_COLORS[i % SYSTEM_COLORS.length];
-        });
-        setSystems(uniqueSystems);
-        setColorMapping(colors);
-
-        const allDates = new Set();
-        tickets.forEach(ticket => {
-             if (ticket.createdDate) allDates.add(formatDate(new Date(ticket.createdDate)));
-             const isResolved = ['Ready To Test', 'Closed'].includes(ticket.status);
-             if (isResolved && ticket.resolvedDate) allDates.add(formatDate(new Date(ticket.resolvedDate)));
-        });
-
-        allDates.forEach(dateStr => {
-            if (dateStr !== "Invalid Date") {
-                dailyCreatedStats[dateStr] = { date: dateStr, total: 0 };
-                dailyResolvedStats[dateStr] = { date: dateStr, total: 0 };
-                dailyComparisonStats[dateStr] = { date: dateStr, Created: 0, Resolved: 0 };
-                uniqueSystems.forEach(sys => {
-                    dailyCreatedStats[dateStr][sys] = 0;
-                    dailyResolvedStats[dateStr][sys] = 0;
-                });
-            }
-        });
-
-        tickets.forEach(ticket => {
-            // Process Created Tickets
-            if (ticket.createdDate && ticket.system) {
-                const createdDateStr = formatDate(new Date(ticket.createdDate));
-                if (dailyCreatedStats[createdDateStr]) {
-                    dailyCreatedStats[createdDateStr][ticket.system]++;
-                    dailyCreatedStats[createdDateStr].total++;
-                    dailyComparisonStats[createdDateStr].Created++;
-                    totalCreated++;
-                }
-            }
-            
-            // Process Resolved Tickets
-            const isResolved = ['Ready To Test', 'Closed'].includes(ticket.status);
-            if (isResolved && ticket.resolvedDate && ticket.system) {
-                const resolvedDateStr = formatDate(new Date(ticket.resolvedDate));
-                if (dailyResolvedStats[resolvedDateStr]) {
-                   dailyResolvedStats[resolvedDateStr][ticket.system]++;
-                   dailyResolvedStats[resolvedDateStr].total++;
-                   dailyComparisonStats[resolvedDateStr].Resolved++;
-                   totalResolved++;
-                }
-            }
-        });
-        
-        setCreatedChartData(Object.values(dailyCreatedStats).sort((a, b) => new Date(a.date) - new Date(b.date)));
-        setResolvedChartData(Object.values(dailyResolvedStats).sort((a, b) => new Date(a.date) - new Date(b.date)));
-        setComparisonChartData(Object.values(dailyComparisonStats).sort((a, b) => new Date(a.date) - new Date(b.date)));
-        setTotals({ created: totalCreated, resolved: totalResolved, open: totalCreated - totalResolved });
-    };
-    
-    useEffect(() => {
-        const initialDataProcessed = initialTicketData.map(d => ({...d, 'Resolution Time': d.resolvedDate}));
-        processTicketData(initialDataProcessed);
-    }, []);
-
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (!file) {
-             setErrorMessage('No file selected.');
-             return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue Tracker Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        
-        if (!window.Papa) {
-            setErrorMessage('CSV parsing library is still loading. Please try again in a moment.');
-            return;
+        .chart-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
+         .debug-area { background-color: #1f2937; color: #d1d5db; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body class="bg-gray-50">
 
-        setFileName(file.name);
-        setErrorMessage('');
+    <div id="dashboard-content" class="container mx-auto p-4 md:p-8">
 
-        window.Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                const requiredHeaders = ['ID', 'Status', 'System', 'CreatedDate', 'Resolution Time'];
-                const actualHeaders = results.meta.fields;
-                const missingHeaders = requiredHeaders.filter(h => !actualHeaders.includes(h));
-
-                if (missingHeaders.length > 0) {
-                    setErrorMessage(`CSV is missing required headers: ${missingHeaders.join(', ')}.`);
-                    setFileName('');
-                    return;
-                }
-                
-                const parsedTickets = results.data.map(row => ({
-                    id: row.ID, status: row.Status, system: row.System,
-                    createdDate: row.CreatedDate, resolvedDate: row['Resolution Time']
-                }));
-                processTicketData(parsedTickets);
-            },
-            error: (error) => setErrorMessage(`Error parsing CSV: ${error.message}`),
-        });
-    };
-
-    const CustomTooltip = ({ active, payload, label }) => {
-        if (active && payload && payload.length) {
-            const dataPayload = payload.filter(p => p.value > 0);
-            return (
-                <div className="p-4 bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg backdrop-blur-sm">
-                    <p className="font-bold text-gray-800 dark:text-gray-100 mb-2">{label}</p>
-                    {dataPayload.map((p, i) => (
-                         <p key={`payload-${i}`} className="text-sm" style={{ color: p.color }}>{`${p.name}: ${p.value}`}</p>
-                    ))}
+        <!-- Header -->
+        <header id="main-header" class="sticky top-4 z-50 bg-white/80 backdrop-blur-lg p-3 rounded-2xl shadow-xl border border-gray-200/50 mb-8">
+            <div class="flex flex-col">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <h1 class="text-lg font-bold text-gray-800 text-center md:text-left">Hypercare Incident Analysis Dashboard</h1>
                 </div>
-            );
-        }
-        return null;
-    };
-    
-    const SimpleTooltip = ({ active, payload, label }) => {
-        if (active && payload && payload.length) {
-            return (
-                 <div className="p-4 bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg backdrop-blur-sm">
-                    <p className="font-bold text-gray-800 dark:text-gray-100 mb-2">{label}</p>
-                    <p className="text-sm" style={{ color: '#3b82f6' }}>{`Created: ${payload[0].value}`}</p>
-                    <p className="text-sm" style={{ color: '#22c55e' }}>{`Resolved: ${payload[1].value}`}</p>
-                </div>
-            );
-        }
-        return null;
-    }
-
-    return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen p-4 sm:p-6 lg:p-8 font-sans">
-            <div className="max-w-full mx-auto">
-                <header className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Ticket Analysis Dashboard</h1>
-                    <p className="text-md text-gray-500 dark:text-gray-400 mt-1">Daily Ticket Creation vs. Resolution by System</p>
-                </header>
-
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-                    <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Upload Your Data</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        Select a CSV file with 'ID', 'Status', 'System', 'CreatedDate', and 'Resolution Time' columns.
-                    </p>
-                     <div className="flex items-center gap-4">
-                        <label className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center transition-colors">
-                            <UploadCloud className="mr-2 h-5 w-5" /><input type="file" className="hidden" accept=".csv" onChange={handleFileChange} />
-                            <span>{fileName ? "Change File" : "Upload CSV"}</span>
-                        </label>
-                        {fileName && <span className="text-gray-600 dark:text-gray-300">{fileName}</span>}
+                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gray-200/80 pt-2 mt-2">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                         <p class="text-gray-500 text-sm font-medium">Total Issues</p>
+                         <p id="total-issues" class="text-5xl font-bold text-blue-600">0</p>
                     </div>
-                    {errorMessage && (
-                        <div className="mt-4 flex items-center text-red-600 dark:text-red-500">
-                             <AlertCircle className="mr-2 h-5 w-5" /><span className="text-sm font-medium">{errorMessage}</span>
-                        </div>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Created</p>
-                            <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{totals.created}</p>
-                        </div>
-                         <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><FilePlus2 className="h-6 w-6 text-blue-500" /></div>
-                    </div>
-                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Resolved</p>
-                            <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{totals.resolved}</p>
-                        </div>
-                         <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><TrendingUp className="h-6 w-6 text-green-500" /></div>
-                    </div>
-                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Currently Open</p>
-                            <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{totals.open}</p>
-                        </div>
-                        <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-full">
-                            <svg className="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </div>
+                    <div id="system-badges-container" class="flex flex-wrap gap-2 justify-center sm:justify-end flex-grow">
+                        <!-- Badges for total issues will be inserted here by JS -->
                     </div>
                 </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    {/* Created Tickets Chart */}
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
-                        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Daily Ticket Creation by System</h2>
-                        <div style={{ width: '100%', height: 400 }}>
-                            <ResponsiveContainer>
-                                <BarChart data={createdChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} vertical={false} />
-                                    <XAxis dataKey="date" tick={{ fill: '#6b7280' }} tickLine={{ stroke: '#6b7280' }} className="text-xs" />
-                                    <YAxis allowDecimals={false} tick={{ fill: '#6b7280' }} tickLine={{ stroke: '#6b7280' }} className="text-xs" />
-                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(107, 114, 128, 0.1)' }}/>
-                                    <Legend wrapperStyle={{paddingTop: '20px'}}/>
-                                    {systems.map((sys, index) => (
-                                        <Bar key={`created-${sys}`} dataKey={sys} stackId="created" name={sys} fill={colorMapping[sys]}>
-                                           {index === systems.length - 1 && (<LabelList dataKey="total" content={renderCustomizedLabel} />)}
-                                        </Bar>
-                                    ))}
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                    {/* Resolved Tickets Chart */}
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
-                        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Daily Ticket Resolution by System</h2>
-                        <div style={{ width: '100%', height: 400 }}>
-                            <ResponsiveContainer>
-                                <BarChart data={resolvedChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} vertical={false} />
-                                    <XAxis dataKey="date" tick={{ fill: '#6b7280' }} tickLine={{ stroke: '#6b7280' }} className="text-xs" />
-                                    <YAxis allowDecimals={false} tick={{ fill: '#6b7280' }} tickLine={{ stroke: '#6b7280' }} className="text-xs" />
-                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(107, 114, 128, 0.1)' }}/>
-                                    <Legend wrapperStyle={{paddingTop: '20px'}}/>
-                                    {systems.map((sys, index) => (
-                                        <Bar key={`resolved-${sys}`} dataKey={sys} stackId="resolved" name={sys} fill={colorMapping[sys]}>
-                                             {index === systems.length - 1 && (<LabelList dataKey="total" content={renderCustomizedLabel} />)}
-                                        </Bar>
-                                    ))}
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                    {/* Comparison Chart */}
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
-                        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Daily Totals: Created vs. Resolved</h2>
-                        <div style={{ width: '100%', height: 400 }}>
-                            <ResponsiveContainer>
-                                <BarChart data={comparisonChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} vertical={false} />
-                                    <XAxis dataKey="date" tick={{ fill: '#6b7280' }} tickLine={{ stroke: '#6b7280' }} className="text-xs" />
-                                    <YAxis allowDecimals={false} tick={{ fill: '#6b7280' }} tickLine={{ stroke: '#6b7280' }} className="text-xs" />
-                                    <Tooltip content={<SimpleTooltip />} cursor={{ fill: 'rgba(107, 114, 128, 0.1)' }}/>
-                                    <Legend wrapperStyle={{paddingTop: '20px'}}/>
-                                    <Bar dataKey="Created" fill="#3b82f6" name="Created" />
-                                    <Bar dataKey="Resolved" fill="#22c55e" name="Resolved" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
+                <div id="timestamp-container" class="w-full text-right text-xs text-gray-400 mt-2">
+                    <!-- Timestamp will be inserted here by JS -->
                 </div>
             </div>
-        </div>
-    );
-}
+        </header>
+
+        <main id="dashboard-view">
+            <!-- Issues by Status Section -->
+            <section id="status-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Status Summary</h2>
+                <div id="status-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6">
+                   <!-- Status cards will be dynamically inserted here -->
+                </div>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issues by Department Section -->
+            <section id="department-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Department Summary</h2>
+                <div class="overflow-x-auto pb-4">
+                    <div id="department-cards-container" class="flex flex-nowrap gap-6">
+                        <!-- Department cards will be dynamically inserted here -->
+                    </div>
+                </div>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+    
+            <!-- Issues by System Section -->
+            <section id="system-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">System</h2>
+                 <div class="overflow-x-auto pb-4">
+                    <div id="system-cards-container" class="flex flex-nowrap gap-6">
+                        <!-- System cards will be dynamically inserted here -->
+                    </div>
+                </div>
+            </section>
+    
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+            
+            <!-- Issues by Priority Section -->
+            <section id="priority-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Priority</h2>
+                <div id="priority-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Priority cards will be dynamically inserted here -->
+                </div>
+            </section>
+            
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+
+            <!-- Issue Category Analysis Section -->
+            <section id="issue-category-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Issue Category Analysis</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div id="issue-category-chart-container" class="relative"></div>
+                    <div id="issue-category-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                </div>
+            </section>
+            
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+            
+            <!-- Combined Charts Section -->
+            <section id="combined-charts-summary" class="mb-12">
+                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Visual Analysis</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Issue Reporter Section -->
+                    <div class="bg-white p-6 rounded-xl shadow-md h-full">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Issue Reporter</h3>
+                        <div id="reporter-chart-container" class="flex flex-col items-center justify-center gap-8">
+                            <!-- Donut chart and legend will be rendered here -->
+                        </div>
+                    </div>
+                     <!-- Issues by Distributor Section -->
+                     <div class="bg-white p-6 rounded-xl shadow-md h-full">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Distributors</h3>
+                        <div id="distributor-chart-container" class="relative overflow-x-auto"></div>
+                        <div id="distributor-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+            
+            <!-- Issue By Assignee Section -->
+            <section id="assignee-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Issue By Assignee</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div id="assignee-chart-container" class="relative"></div>
+                    <div id="assignee-legend-container" class="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 pt-4 border-t border-gray-200"></div>
+                </div>
+            </section>
+
+             <!-- Ticket Create vs Resolve by Date Section -->
+            <section id="create-resolve-summary" class="mb-12">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Ticket Create vs Resolve Analysis</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center justify-between"><div><p class="text-sm font-medium text-gray-500">Total Created</p><p id="total-created" class="text-3xl font-bold text-gray-800">0</p></div><div class="bg-blue-100 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-blue-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center justify-between"><div><p class="text-sm font-medium text-gray-500">Total Resolved</p><p id="total-resolved" class="text-3xl font-bold text-gray-800">0</p></div><div class="bg-green-100 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-500"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center justify-between"><div><p class="text-sm font-medium text-gray-500">Currently Open</p><p id="total-open" class="text-3xl font-bold text-gray-800">0</p></div><div class="bg-orange-100 p-3 rounded-full"><svg class="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div></div>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                   <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md"><h2 class="text-lg font-semibold text-gray-700 mb-4">Daily Ticket Creation by System</h2><div style="height: 450px;"><canvas id="created-chart-canvas"></canvas></div></div>
+                   <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md"><h2 class="text-lg font-semibold text-gray-700 mb-4">Daily Ticket Resolution by System</h2><div style="height: 450px;"><canvas id="resolved-chart-canvas"></canvas></div></div>
+                   <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md"><h2 class="text-lg font-semibold text-gray-700 mb-4">Daily Totals: Created vs. Resolved</h2><div style="height: 450px;"><canvas id="comparison-chart-canvas"></canvas></div></div>
+               </div>
+            </section>
+
+            <!-- Divider -->
+            <hr class="my-12 border-gray-200">
+
+             <!-- Upload/Download Buttons Section -->
+            <section class="text-center py-8">
+                <label for="csv-upload" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg cursor-pointer hover:bg-blue-700 transition-transform transform hover:scale-105 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload New CSV Data</span>
+                </label>
+                <input type="file" id="csv-upload" class="hidden" accept=".csv">
+            </section>
+             <div id="log-output" class="mt-4">
+                <h3 class="text-md font-semibold text-gray-600">Log</h3>
+                <pre id="log-pre" class="debug-area"></pre>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let issueData = [];
+        const chartInstances = {};
+
+        // --- DATA PROCESSING AND RENDERING ---
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- SHARED DEFINITIONS ---
+            const systemColors = {
+                "glassRUN": "#10B981",
+                "JDE":      "#3B82F6",
+                "DIS":      "#F59E0B",
+                "Power BI": "#F97316",
+                "SEM":      "#D946EF",
+                "DOT":      "#8B5CF6"
+            };
+
+            const systemColorClasses = {
+                 "glassRUN": "bg-green-50 text-green-700 border border-green-400",
+                "JDE":      "bg-blue-50 text-blue-700 border border-blue-400",
+                "DIS":      "bg-amber-50 text-amber-700 border border-amber-400",
+                "Power BI": "bg-orange-50 text-orange-700 border border-orange-400",
+                "SEM":      "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-400",
+                "DOT":      "bg-violet-50 text-violet-700 border border-violet-400"
+            }
+            
+            const systemStyling = {
+                "glassRUN": { icon: "fa-solid fa-layer-group", color: "text-green-500" },
+                "JDE":      { icon: "fa-solid fa-database", color: "text-blue-500" },
+                "DIS":      { icon: "fa-solid fa-chart-pie", color: "text-amber-500" },
+                "Power BI": { icon: "fa-solid fa-chart-simple", color: "text-orange-500" },
+                "SEM":      { icon: "fa-solid fa-magnifying-glass-chart", color: "text-fuchsia-500" },
+                "DOT":      { icon: "fa-solid fa-circle-nodes", color: "text-violet-500" }
+            };
+
+            const statusMap = {
+                "New": "Open", "Open": "Open", 
+                "In Progress": "Fixing", "Fixing": "Fixing", 
+                "On Hold": "Pending", "Pending": "Pending",
+                "Ready To Test": "Ready To Test", 
+                "Testing": "Testing", 
+                "Closed": "Closed", 
+                "Canceled": "Closed",
+                "Out Of Scope": "Out Of Scope"
+            };
+            
+            const statusStyles = {
+                "Open":         { order: 1, icon: "fa-solid fa-folder-open",   color: "red", hex: "#EF4444" },
+                "Fixing":       { order: 2, icon: "fa-solid fa-wrench",        color: "blue", hex: "#3B82F6" },
+                "Pending":      { order: 3, icon: "fa-solid fa-pause",         color: "yellow", hex: "#F59E0B" },
+                "Ready To Test":{ order: 4, icon: "fa-solid fa-flag-checkered",color: "cyan", hex: "#06B6D4" },
+                "Testing":      { order: 5, icon: "fa-solid fa-vial",          color: "teal", hex: "#14B8A6" },
+                "Closed":       { order: 6, icon: "fa-solid fa-circle-check",  color: "green", hex: "#22C55E" },
+                "Out Of Scope": { order: 7, icon: "fa-solid fa-ban",           color: "gray", hex: "#6B7280" },
+                "Uncategorized": { order: 8, icon: "fa-solid fa-question-circle", color: "gray", hex: "#6B7280" }
+            };
+
+            const departmentStyling = {
+                "Logistic":    { icon: "fa-solid fa-truck-ramp-box", color: "text-orange-500" },
+                "OtC":         { icon: "fa-solid fa-file-invoice-dollar", color: "text-green-500" },
+                "DMT":         { icon: "fa-solid fa-briefcase", color: "text-purple-500" },
+                "Tax":         { icon: "fa-solid fa-landmark", color: "text-amber-500" },
+                "RTR":         { icon: "fa-solid fa-chart-line", color: "text-sky-500" },
+                "Procurement": { icon: "fa-solid fa-cart-shopping", color: "text-pink-500" },
+                "Finance":     { icon: "fa-solid fa-piggy-bank", color: "text-lime-500" },
+                "IT":          { icon: "fa-solid fa-desktop", color: "text-indigo-500" }
+            };
+
+            const priorityStyles = {
+                "P1": { name: "Critical", icon: "fa-solid fa-triangle-exclamation", color: "red" },
+                "P2": { name: "High",     icon: "fa-solid fa-arrow-up",            color: "orange" },
+                "P3": { name: "Medium",   icon: "fa-solid fa-equals",              color: "amber" },
+                "P4": { name: "Low",      icon: "fa-solid fa-arrow-down",          color: "sky" }
+            };
+
+            function log(message) {
+                console.log(message);
+                const logOutput = document.getElementById('log-output');
+                const logPre = document.getElementById('log-pre');
+                if (logOutput) logOutput.classList.remove('hidden');
+                if (logPre) logPre.textContent = `${new Date().toLocaleTimeString()}: ${message}\n` + logPre.textContent;
+            }
+
+            function showError(message) {
+                log(`ERROR: ${message}`);
+            }
+
+            function updateAllVisualizations(currentData) {
+                renderStickyHeader(currentData);
+                renderStatusSummary(currentData);
+                renderDepartmentSummary(currentData);
+                renderPrioritySummary(currentData);
+                renderSystemSummary(currentData);
+                renderDistributorChart(currentData);
+                renderReporterChart(currentData);
+                renderIssueCategoryChart(currentData);
+                renderAssigneeChart(currentData);
+                renderCreateResolveCharts(currentData);
+            }
+
+            // --- RENDER STICKY HEADER ---
+            function renderStickyHeader(data) {
+                document.getElementById('total-issues').textContent = data.length;
+                const totalSystemCounts = data.reduce((acc, issue) => {
+                    if (systemColorClasses.hasOwnProperty(issue.System)) {
+                        acc[issue.System] = (acc[issue.System] || 0) + 1;
+                    }
+                    return acc;
+                }, {});
+                const totalBadgeContainer = document.getElementById('system-badges-container');
+                totalBadgeContainer.innerHTML = '';
+                Object.keys(totalSystemCounts).sort().forEach(system => {
+                    totalBadgeContainer.innerHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${totalSystemCounts[system]}</span>`;
+                });
+                const timestampContainer = document.getElementById('timestamp-container');
+                timestampContainer.textContent = `Report generated: ${new Date().toLocaleString()}`;
+            }
+
+            // --- RENDER STATUS SUMMARY SECTION ---
+            function renderStatusSummary(data) {
+                const statusCounts = data.reduce((acc, issue) => {
+                    const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                    acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const container = document.getElementById('status-cards-container');
+                container.innerHTML = '';
+                Object.keys(statusCounts).sort((a, b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99))
+                .forEach(status => {
+                    const count = statusCounts[status];
+                    const style = statusStyles[status] || statusStyles["Uncategorized"];
+                    const issuesInStatus = data.filter(issue => (statusMap[issue.Status] || "Uncategorized") === status);
+                    const systemCountsInStatus = issuesInStatus.reduce((acc, issue) => {
+                         if (systemColorClasses.hasOwnProperty(issue.System)) {
+                            acc[issue.System] = (acc[issue.System] || 0) + 1;
+                         }
+                        return acc;
+                    }, {});
+                    let badgesHTML = '';
+                    Object.keys(systemCountsInStatus).sort().forEach(system => {
+                        badgesHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${systemCountsInStatus[system]}</span>`;
+                    });
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-md flex flex-col justify-between border-l-4 border-${style.color}-500 h-full">
+                           <div>
+                                <div class="flex items-center justify-between mb-4">
+                                     <h3 class="font-bold text-gray-800">${status}</h3>
+                                     <div class="bg-${style.color}-100 rounded-full p-2">
+                                        <i class="${style.icon} text-${style.color}-500 text-lg fa-fw"></i>
+                                    </div>
+                                </div>
+                                <p class="text-4xl font-bold text-gray-800">${count}</p>
+                           </div>
+                           <div class="flex flex-wrap gap-1 mt-4">
+                                ${badgesHTML}
+                           </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // --- RENDER DEPARTMENT SUMMARY SECTION ---
+            function renderDepartmentSummary(data) {
+                const departmentData = data.reduce((acc, issue) => {
+                    const dept = issue.Department;
+                     if (!dept || !departmentStyling[dept]) return acc;
+                    if (!acc[dept]) acc[dept] = [];
+                    acc[dept].push(issue);
+                    return acc;
+                }, {});
+                
+                const container = document.getElementById('department-cards-container');
+                container.innerHTML = '';
+                Object.keys(departmentData).sort().forEach(deptName => {
+                    const issuesInDept = departmentData[deptName];
+                    const total = issuesInDept.length;
+                    const style = departmentStyling[deptName];
+                    const statuses = issuesInDept.reduce((acc, issue) => {
+                        const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                        acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                        return acc;
+                    }, {});
+                    const systems = issuesInDept.reduce((acc, issue) => {
+                         if (systemColorClasses.hasOwnProperty(issue.System)) {
+                            acc[issue.System] = (acc[issue.System] || 0) + 1;
+                         }
+                         return acc;
+                    }, {});
+                    let systemBadgesHTML = '<div class="flex flex-wrap gap-2 mt-4">';
+                     Object.keys(systems).sort().forEach(system => {
+                        systemBadgesHTML += `<span class="${systemColorClasses[system]} text-xs font-semibold px-2.5 py-1 rounded-full">${system}: ${systems[system]}</span>`;
+                    });
+                    systemBadgesHTML += '</div>';
+                    let statusHTML = '<div class="space-y-2 mt-4 pt-4 border-t border-gray-100">';
+                    const sortedStatuses = Object.keys(statuses).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
+                    sortedStatuses.forEach(statusName => {
+                        const count = statuses[statusName];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Uncategorized'];
+                        statusHTML += `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-${statusStyle.color}-500 mr-2"></span>
+                                    <span>${statusName}</span>
+                                </div>
+                                <span class="font-semibold text-gray-700">${count}</span>
+                            </div>
+                        `;
+                    });
+                    statusHTML += '</div>';
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
+                           <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-3">
+                                        <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                        <h3 class="font-bold text-gray-800">${deptName}</h3>
+                                    </div>
+                                    <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                                </div>
+                                ${total > 0 ? systemBadgesHTML : ''}
+                            </div>
+                            <div class="mt-auto">
+                                ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // --- RENDER PRIORITY SUMMARY SECTION ---
+            function renderPrioritySummary(data) {
+                const priorityGroups = data.reduce((acc, issue) => {
+                    const priority = issue.Priority;
+                    if (!priority) return acc;
+                    if (!acc[priority]) acc[priority] = [];
+                    acc[priority].push(issue);
+                    return acc;
+                }, {});
+                const container = document.getElementById('priority-cards-container');
+                container.innerHTML = '';
+                Object.keys(priorityStyles).forEach(priorityKey => {
+                    const issues = priorityGroups[priorityKey] || [];
+                    const style = priorityStyles[priorityKey];
+                    const total = issues.length;
+                    const systemCounts = issues.reduce((acc, issue) => {
+                        if (systemColorClasses.hasOwnProperty(issue.System)) {
+                           acc[issue.System] = (acc[issue.System] || 0) + 1;
+                        }
+                        return acc;
+                    }, {});
+                    let systemsHTML = '';
+                     Object.keys(systemCounts).sort().forEach(sys => {
+                        systemsHTML += `<span class="${systemColorClasses[sys]} text-xs font-semibold px-2 py-1 rounded-full">${sys} (${systemCounts[sys]})</span>`;
+                    });
+                    const deptCounts = issues.reduce((acc, issue) => {
+                       if (departmentStyling.hasOwnProperty(issue.Department)) {
+                           acc[issue.Department] = (acc[issue.Department] || 0) + 1;
+                        }
+                        return acc;
+                    }, {});
+                    let deptsHTML = '';
+                    Object.keys(deptCounts).sort().forEach(dept => {
+                        deptsHTML += `<span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">${dept} (${deptCounts[dept]})</span>`;
+                    });
+                    const statusCounts = issues.reduce((acc, issue) => {
+                        const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                        acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let statusHTML = '<div class="space-y-2 mt-4 pt-4 border-t border-gray-200">';
+                    const sortedStatuses = Object.keys(statusCounts).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
+                    sortedStatuses.forEach(statusName => {
+                        const count = statusCounts[statusName];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Uncategorized'];
+                        statusHTML += `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-${statusStyle.color}-500 mr-2"></span>
+                                    <span>${statusName}</span>
+                                </div>
+                                <span class="font-semibold text-gray-700">${count}</span>
+                            </div>
+                        `;
+                    });
+                    statusHTML += '</div>';
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-${style.color}-500">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-gray-800">${priorityKey} - ${style.name}</h3>
+                                <i class="${style.icon} text-${style.color}-500 text-2xl"></i>
+                            </div>
+                            <p class="text-4xl font-bold text-gray-800 mt-4">${total}</p>
+                            <div class="mt-4 space-y-3">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 mb-2">Systems</h4>
+                                    <div class="flex flex-wrap gap-2">${systemsHTML}</div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-500 mb-2">Departments</h4>
+                                    <div class="flex flex-wrap gap-2">${deptsHTML}</div>
+                                </div>
+                            </div>
+                            ${total > 0 ? statusHTML : ''}
+                        </div>
+                    `;
+                });
+            }
+
+             // --- RENDER SYSTEM SUMMARY SECTION ---
+            function renderSystemSummary(data) {
+                const systemGroups = data.reduce((acc, issue) => {
+                    const system = issue.System;
+                    if (!system || !systemStyling[system]) return acc;
+                    if (!acc[system]) acc[system] = [];
+                    acc[system].push(issue);
+                    return acc;
+                }, {});
+
+                const container = document.getElementById('system-cards-container');
+                container.innerHTML = '';
+
+                Object.keys(systemGroups).sort().forEach(systemName => {
+                    const issuesInSystem = systemGroups[systemName] || [];
+                    const total = issuesInSystem.length;
+                    const style = systemStyling[systemName];
+
+                    const statusCounts = issuesInSystem.reduce((acc, issue) => {
+                        const mappedStatus = statusMap[issue.Status] || "Uncategorized";
+                        acc[mappedStatus] = (acc[mappedStatus] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let statusHTML = '<div class="space-y-2 mt-4 pt-4 border-t border-gray-100">';
+                    const sortedStatuses = Object.keys(statusCounts).sort((a,b) => (statusStyles[a]?.order || 99) - (statusStyles[b]?.order || 99));
+                    sortedStatuses.forEach(statusName => {
+                        const count = statusCounts[statusName];
+                        const statusStyle = statusStyles[statusName] || statusStyles['Uncategorized'];
+                        statusHTML += `
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <span class="h-2 w-2 rounded-full bg-${statusStyle.color}-500 mr-2"></span>
+                                    <span>${statusName}</span>
+                                </div>
+                                <span class="font-semibold text-gray-700">${count}</span>
+                            </div>`;
+                    });
+                    statusHTML += '</div>';
+
+                    const priorityCounts = issuesInSystem.reduce((acc, issue) => {
+                        if(issue.Priority) acc[issue.Priority] = (acc[issue.Priority] || 0) + 1;
+                        return acc;
+                    }, {});
+                    let priorityHTML = '<div class="mt-4 pt-4 border-t border-gray-100"><h4 class="text-sm font-semibold text-gray-500 mb-2">Priority Breakdown</h4><div class="flex flex-wrap gap-2">';
+                    Object.keys(priorityStyles).forEach(priorityKey => {
+                        if (priorityCounts[priorityKey]) {
+                            priorityHTML += `<span class="bg-${priorityStyles[priorityKey].color}-100 text-${priorityStyles[priorityKey].color}-800 text-xs font-semibold px-2 py-1 rounded-full">${priorityKey} (${priorityCounts[priorityKey]})</span>`;
+                        }
+                    });
+                    priorityHTML += '</div></div>';
+
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
+                           <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-3">
+                                        <i class="${style.icon} ${style.color} text-xl fa-fw"></i>
+                                        <h3 class="font-bold text-gray-800">${systemName}</h3>
+                                    </div>
+                                    <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
+                                </div>
+                                 ${total > 0 ? priorityHTML : ''}
+                           </div>
+                           <div class="mt-auto">
+                                ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
+                           </div>
+                        </div>
+                    `;
+                });
+            }
+            
+             // --- RENDER DISTRIBUTOR CHART ---
+            function renderDistributorChart(data) {
+                const container = d3.select("#distributor-chart-container");
+                container.html("");
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+
+                const distributorData = d3.group(data, d => d["Impacted Distributor"]);
+                
+                const processedData = Array.from(distributorData, ([distributor, issues]) => {
+                    if (distributor === null || distributor === '') return null;
+                    const systemCounts = d3.rollup(issues, v => v.length, d => {
+                        return systemColors.hasOwnProperty(d.System) ? d.System : "Other";
+                    });
+                    const systems = Array.from(systemCounts, ([system, count]) => ({ system, count }));
+                    const total = d3.sum(systems, d => d.count);
+                    return { distributor, systems, total };
+                }).filter(Boolean).sort((a, b) => b.total - a.total);
+
+                const systems = Object.keys(systemColors);
+                const margin = {top: 20, right: 40, bottom: 40, left: 250};
+                const parentWidth = container.node().getBoundingClientRect().width;
+                const width = parentWidth > 0 ? parentWidth - margin.left - margin.right : 500;
+                const height = processedData.length * 50;
+
+                const svg = container.append("svg")
+                    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+                
+                const y = d3.scaleBand()
+                    .domain(processedData.map(d => d.distributor))
+                    .range([0, height])
+                    .padding(0.3);
+
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(processedData, d => d.total) || 1])
+                    .range([0, width]);
+
+                const color = d3.scaleOrdinal()
+                    .domain(systems)
+                    .range(Object.values(systemColors));
+
+                const stack = d3.stack()
+                    .keys(systems)
+                    .value((d, key) => {
+                        const systemData = d.systems.find(s => s.system === key);
+                        return systemData ? systemData.count : 0;
+                    });
+                
+                const series = stack(processedData);
+                
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                        .attr("fill", d => color(d.key))
+                    .selectAll("rect")
+                    .data(d => d)
+                    .join("rect")
+                        .attr("y", d => y(d.data.distributor))
+                        .attr("x", d => x(d[0]))
+                        .attr("width", d => x(d[1]) - x(d[0]))
+                        .attr("height", y.bandwidth())
+                        .on("mouseover", (event, d) => {
+                            const systemName = d3.select(event.currentTarget.parentNode).datum().key;
+                            const count = d[1] - d[0];
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d.data.distributor}</b><br>${systemName}: ${count}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+                
+                 svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                    .selectAll("text")
+                    .data(d => d)
+                    .join("text")
+                    .text(d => {
+                        const value = d[1] - d[0];
+                        return value > 0 ? value : "";
+                    })
+                    .attr("x", d => x(d[0]) + (x(d[1]) - x(d[0])) / 2)
+                    .attr("y", d => y(d.data.distributor) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "500");
+
+                svg.append("g")
+                    .selectAll("text")
+                    .data(processedData)
+                    .join("text")
+                    .text(d => d.total)
+                    .attr("x", d => x(d.total) + 8)
+                    .attr("y", d => y(d.distributor) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("fill", "#1f2937")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "600");
+
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSize(0))
+                    .select(".domain").remove();
+                
+                const legendContainer = document.getElementById('distributor-legend-container');
+                legendContainer.innerHTML = ''; 
+                systems.forEach(system => {
+                    const colorValue = systemColors[system];
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${colorValue}"></div>
+                        <span class="text-sm text-gray-600">${system}</span>
+                    `;
+                    legendContainer.appendChild(legendItem);
+                });
+            }
+
+            // --- RENDER REPORTER DONUT CHART ---
+            function renderReporterChart(data) {
+                const container = d3.select("#reporter-chart-container");
+                container.html(""); 
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+                
+                const reporterData = d3.group(data, d => d["Created By"]);
+                const processedData = Array.from(reporterData, ([reporter, issues]) => ({
+                    name: reporter,
+                    count: issues.length
+                })).sort((a,b) => b.count - a.count);
+
+                const totalIssuesInChart = d3.sum(processedData, d => d.count);
+
+                const width = 300, height = 300, margin = 20;
+                const radius = Math.min(width, height) / 2 - margin;
+                
+                const svg = container.append("div").attr("class", "relative")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .append("g")
+                    .attr("transform", `translate(${width/2},${height/2})`);
+                
+                const color = d3.scaleOrdinal(d3.schemeTableau10);
+
+                const pie = d3.pie()
+                    .value(d => d.count)
+                    .sort(null);
+
+                const arc = d3.arc()
+                    .innerRadius(radius * 0.6)
+                    .outerRadius(radius);
+                
+                const arcs = pie(processedData);
+
+                svg.selectAll('path')
+                    .data(arcs)
+                    .join('path')
+                    .attr('d', arc)
+                    .attr('fill', (d, i) => color(i))
+                    .attr('stroke', 'white')
+                    .style('stroke-width', '2px')
+                    .on("mouseover", (event, d) => {
+                        tooltip.style("opacity", 1)
+                            .html(`<b>${d.data.name}</b><br>${d.data.count} issues (${((d.data.count / totalIssuesInChart) * 100).toFixed(1)}%)`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                        d3.select(event.currentTarget).transition().duration(200).attr('transform', `scale(1.05)`);
+                    })
+                    .on("mouseout", (event, d) => {
+                        tooltip.style("opacity", 0);
+                        d3.select(event.currentTarget).transition().duration(200).attr('transform', `scale(1)`);
+                    });
+
+                svg.selectAll('text.slice-label')
+                    .data(arcs)
+                    .join('text')
+                    .attr('class', 'slice-label')
+                    .attr('transform', d => `translate(${arc.centroid(d)})`)
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '0.35em')
+                    .style('fill', 'white')
+                    .style('font-size', '12px')
+                    .style('font-weight', 'bold')
+                    .text(d => `${((d.data.count / totalIssuesInChart) * 100).toFixed(0)}%`);
+
+                 svg.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '-0.5em')
+                    .style('font-size', '2.5rem')
+                    .style('font-weight', 'bold')
+                    .style('fill', '#1f2937')
+                    .text(totalIssuesInChart);
+                 svg.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '1em')
+                    .style('font-size', '0.9rem')
+                    .style('fill', '#6b7280')
+                    .text('Total Issues');
+
+                const legendContainer = container.append('div')
+                    .attr('class', 'grid grid-cols-2 gap-x-6 gap-y-3');
+                
+                processedData.forEach((d, i) => {
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${color(i)}"></div>
+                        <span class="text-sm text-gray-700">${d.name} (${d.count})</span>
+                    `;
+                    legendContainer.node().appendChild(legendItem);
+                });
+            }
+            
+            // --- RENDER TICKETS BY DATE CHART (NOW EMPTY) ---
+            function renderTicketsByDateChart(data) {}
+
+             // --- RENDER ISSUE CATEGORY ANALYSIS CHART ---
+            function renderIssueCategoryChart(data) {
+                const container = d3.select("#issue-category-chart-container");
+                container.html("");
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+
+                const categoryData = d3.group(data, d => d["Issue Category"], d => d.System);
+                
+                const processedData = Array.from(categoryData, ([category, systems]) => {
+                     if (!category) return null;
+                    const systemCounts = Array.from(systems, ([system, issues]) => ({ system, count: issues.length }));
+                    const total = d3.sum(systemCounts, d => d.count);
+                    return { category, systems: systemCounts, total };
+                }).filter(Boolean).sort((a,b) => b.total - a.total);
+
+                const allSystems = [...new Set(data.map(d => d.System).filter(Boolean))];
+
+                const margin = {top: 20, right: 40, bottom: 40, left: 250};
+                const parentWidth = container.node().getBoundingClientRect().width;
+                const width = parentWidth > 0 ? parentWidth - margin.left - margin.right : 700;
+                const height = processedData.length * 50;
+
+                const svg = container.append("svg")
+                    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const y = d3.scaleBand()
+                    .domain(processedData.map(d => d.category))
+                    .range([0, height])
+                    .padding(0.3);
+
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(processedData, d => d.total) || 1])
+                    .range([0, width]);
+                
+                const color = d3.scaleOrdinal(d3.schemePaired).domain(allSystems);
+
+                const stack = d3.stack()
+                    .keys(allSystems)
+                    .value((d, key) => {
+                        const systemData = d.systems.find(sys => sys.system === key);
+                        return systemData ? systemData.count : 0;
+                    });
+
+                const series = stack(processedData);
+
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                        .attr("fill", d => color(d.key))
+                    .selectAll("rect")
+                    .data(d => d)
+                    .join("rect")
+                        .attr("y", d => y(d.data.category))
+                        .attr("x", d => x(d[0]))
+                        .attr("width", d => x(d[1]) - x(d[0]))
+                        .attr("height", y.bandwidth())
+                        .on("mouseover", (event, d) => {
+                            const systemName = d3.select(event.currentTarget.parentNode).datum().key;
+                            const count = d[1] - d[0];
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d.data.category}</b><br>${systemName}: ${count}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+                        
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                    .selectAll("text")
+                    .data(d => d)
+                    .join("text")
+                    .text(d => {
+                        const value = d[1] - d[0];
+                        const percentage = (value / d.data.total) * 100;
+                        return percentage > 5 ? `${percentage.toFixed(0)}%` : "";
+                    })
+                    .attr("x", d => x(d[0]) + (x(d[1]) - x(d[0])) / 2)
+                    .attr("y", d => y(d.data.category) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "500");
+
+                svg.append("g")
+                    .selectAll("text")
+                    .data(processedData)
+                    .join("text")
+                    .text(d => d.total)
+                    .attr("x", d => x(d.total) + 8)
+                    .attr("y", d => y(d.category) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("fill", "#1f2937")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "600");
+
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSize(0))
+                    .select(".domain").remove();
+
+                const legendContainer = document.getElementById('issue-category-legend-container');
+                legendContainer.innerHTML = '';
+                allSystems.forEach(system => {
+                    const colorValue = color(system);
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${colorValue}"></div>
+                        <span class="text-sm text-gray-600">${system}</span>
+                    `;
+                    legendContainer.appendChild(legendItem);
+                });
+
+            }
+            
+            // --- RENDER ASSIGNEE CHART ---
+            function renderAssigneeChart(data) {
+                const container = d3.select("#assignee-chart-container");
+                container.html("");
+
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "chart-tooltip");
+
+                const assigneeData = d3.group(data, d => d["Assign To"], d => d.Status);
+                
+                const processedData = Array.from(assigneeData, ([assignee, statuses]) => {
+                     if (!assignee) return null;
+                    const statusCounts = Array.from(statuses, ([status, issues]) => ({ status, count: issues.length }));
+                    const total = d3.sum(statusCounts, d => d.count);
+                    return { assignee, statuses: statusCounts, total };
+                }).filter(Boolean).sort((a,b) => b.total - a.total);
+
+                const allStatuses = Object.keys(statusStyles);
+
+                const margin = {top: 20, right: 40, bottom: 40, left: 150};
+                const parentWidth = container.node().getBoundingClientRect().width;
+                const width = parentWidth > 0 ? parentWidth - margin.left - margin.right : 700;
+                const height = processedData.length * 50;
+
+                const svg = container.append("svg")
+                    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const y = d3.scaleBand()
+                    .domain(processedData.map(d => d.assignee))
+                    .range([0, height])
+                    .padding(0.3);
+
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(processedData, d => d.total) || 1])
+                    .range([0, width]);
+                
+                const color = d3.scaleOrdinal()
+                    .domain(allStatuses)
+                    .range(allStatuses.map(s => statusStyles[s].hex));
+
+                const stack = d3.stack()
+                    .keys(allStatuses)
+                    .value((d, key) => {
+                        const statusData = d.statuses.find(s => (statusMap[s.status] || "Uncategorized") === key);
+                        return statusData ? statusData.count : 0;
+                    });
+
+                const series = stack(processedData);
+
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                        .attr("fill", d => color(d.key))
+                    .selectAll("rect")
+                    .data(d => d)
+                    .join("rect")
+                        .attr("y", d => y(d.data.assignee))
+                        .attr("x", d => x(d[0]))
+                        .attr("width", d => x(d[1]) - x(d[0]))
+                        .attr("height", y.bandwidth())
+                        .on("mouseover", (event, d) => {
+                            const statusName = d3.select(event.currentTarget.parentNode).datum().key;
+                            const count = d[1] - d[0];
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d.data.assignee}</b><br>${statusName}: ${count}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+
+                svg.append("g")
+                    .selectAll("g")
+                    .data(series)
+                    .join("g")
+                    .selectAll("text")
+                    .data(d => d)
+                    .join("text")
+                    .text(function(d) {
+                        const count = d[1] - d[0];
+                        return count > 0 ? count : "";
+                    })
+                    .attr("x", d => x(d[0]) + (x(d[1]) - x(d[0])) / 2)
+                    .attr("y", d => y(d.data.assignee) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "500");
+
+                svg.append("g")
+                    .selectAll("text")
+                    .data(processedData)
+                    .join("text")
+                    .text(d => d.total)
+                    .attr("x", d => x(d.total) + 8)
+                    .attr("y", d => y(d.assignee) + y.bandwidth() / 2)
+                    .attr("dy", "0.35em")
+                    .attr("fill", "#1f2937")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "600");
+
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSize(0))
+                    .select(".domain").remove();
+
+                const legendContainer = document.getElementById('assignee-legend-container');
+                legendContainer.innerHTML = '';
+                allStatuses.forEach(status => {
+                    const colorValue = color(status);
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'flex items-center';
+                    legendItem.innerHTML = `
+                        <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${colorValue}"></div>
+                        <span class="text-sm text-gray-600">${status}</span>
+                    `;
+                    legendContainer.appendChild(legendItem);
+                });
+
+            }
+            
+            // --- RENDER CREATE VS RESOLVE CHARTS (Chart.js) ---
+            function renderCreateResolveCharts(tickets) {
+                const formatDate = (dateString) => {
+                    if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') return null;
+                    const d = new Date(dateString);
+                    return isNaN(d.getTime()) ? null : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+                };
+
+                const stats = {};
+                const uniqueSystems = [...new Set(tickets.map(t => t.System).filter(s => typeof s === 'string' && s.trim()))];
+
+                let processedCount = 0;
+                for (const ticket of tickets) {
+                    const system = ticket.System && typeof ticket.System === 'string' ? ticket.System.trim() : null;
+                    const createdDateStr = formatDate(ticket.CreatedDate);
+                    
+                    if (!system || !createdDateStr) continue;
+                    processedCount++;
+
+                    const resolvedDateStr = formatDate(ticket['Resolution Time']);
+                    const isResolved = ['Ready To Test', 'Closed'].includes(ticket.Status);
+
+                    const ensureDayExists = (dateStr) => {
+                        if (dateStr && !stats[dateStr]) {
+                            stats[dateStr] = { created: {}, resolved: {} };
+                            uniqueSystems.forEach(s => { stats[dateStr].created[s] = 0; stats[dateStr].resolved[s] = 0; });
+                        }
+                    };
+                    
+                    ensureDayExists(createdDateStr);
+                    stats[createdDateStr].created[system]++;
+
+                    if (resolvedDateStr && isResolved) {
+                        ensureDayExists(resolvedDateStr);
+                        stats[resolvedDateStr].resolved[system]++;
+                    }
+                }
+                
+                const labels = Object.keys(stats).sort((a,b) => new Date(a).getTime() - new Date(b).getTime());
+                const colorMapping = {};
+                uniqueSystems.forEach((sys) => {
+                    colorMapping[sys] = systemColors[sys] || '#6b7280';
+                });
+
+                const createdDatasets = uniqueSystems.map(sys => ({
+                    label: sys,
+                    data: labels.map(label => stats[label].created[sys] || 0),
+                    backgroundColor: colorMapping[sys],
+                    borderRadius: 4,
+                }));
+                
+                const resolvedDatasets = uniqueSystems.map(sys => ({
+                    label: sys,
+                    data: labels.map(label => stats[label].resolved[sys] || 0),
+                    backgroundColor: colorMapping[sys],
+                    borderRadius: 4,
+                }));
+
+                const comparisonCreatedData = labels.map(label => Object.values(stats[label].created).reduce((a, b) => a + b, 0));
+                const comparisonResolvedData = labels.map(label => Object.values(stats[label].resolved).reduce((a, b) => a + b, 0));
+                const comparisonDatasets = [
+                    { label: 'Created', data: comparisonCreatedData, backgroundColor: '#3b82f6', borderRadius: 4 },
+                    { label: 'Resolved', data: comparisonResolvedData, backgroundColor: '#22c55e', borderRadius: 4 }
+                ];
+                
+                document.getElementById('total-created').textContent = comparisonCreatedData.reduce((a,b) => a+b, 0);
+                document.getElementById('total-resolved').textContent = comparisonResolvedData.reduce((a,b) => a+b, 0);
+                document.getElementById('total-open').textContent = comparisonCreatedData.reduce((a,b) => a+b, 0) - comparisonResolvedData.reduce((a,b) => a+b, 0);
+                
+                renderChart('created-chart-canvas', 'createdChart', { labels, datasets: createdDatasets }, true);
+                renderChart('resolved-chart-canvas', 'resolvedChart', { labels, datasets: resolvedDatasets }, true);
+                renderChart('comparison-chart-canvas', 'comparisonChart', { labels, datasets: comparisonDatasets }, false);
+            }
+
+            function renderChart(canvasId, chartKey, chartData, isStacked) {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (chartInstances[chartKey]) {
+                    chartInstances[chartKey].destroy();
+                }
+                chartInstances[chartKey] = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    plugins: [ChartDataLabels],
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { stacked: isStacked, grid: { display: false }, ticks: { color: '#6b7280' } },
+                            y: { stacked: isStacked, beginAtZero: true, grid: { display: false }, ticks: { color: '#6b7280' } }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: '#6b7280', usePointStyle: true, pointStyle: 'circle' } },
+                            tooltip: { mode: 'index', intersect: false, backgroundColor: '#1f2937', titleColor: '#ffffff', bodyColor: '#ffffff', padding: 12, cornerRadius: 4, boxPadding: 4 },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'end',
+                                color: '#4b5563',
+                                font: { weight: 'bold' },
+                                formatter: (value, context) => {
+                                    if (isStacked) {
+                                        if (context.datasetIndex === context.chart.data.datasets.length - 1) {
+                                            const total = context.chart.data.datasets.reduce((sum, dataset) => sum + dataset.data[context.dataIndex], 0);
+                                            return total > 0 ? total : '';
+                                        }
+                                        return null;
+                                    }
+                                    return value > 0 ? value : '';
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+
+            // --- INITIALIZE DASHBOARD & UPLOAD ---
+            updateAllVisualizations(issueData);
+
+            document.getElementById('csv-upload').addEventListener('change', event => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const csvText = e.target.result;
+                            const newData = d3.csvParse(csvText);
+                            if(newData.length === 0 || !newData[0].hasOwnProperty('ID')){
+                                alert('Invalid CSV format. Please ensure the file has the correct headers.');
+                                return;
+                            }
+                            issueData = newData;
+                            updateAllVisualizations(issueData);
+                        } catch (error) {
+                            console.error("Error parsing CSV:", error);
+                            alert("Failed to parse the CSV file. Please check the file format and try again.");
+                        }
+                    };
+                    reader.onerror = () => alert("Error reading the file.");
+                    reader.readAsText(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
