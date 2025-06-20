@@ -25,7 +25,6 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
-         .debug-area { background-color: #1f2937; color: #d1d5db; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -160,7 +159,7 @@
                    <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md"><h2 class="text-lg font-semibold text-gray-700 mb-4">Daily Totals: Created vs. Resolved</h2><div style="height: 450px;"><canvas id="comparison-chart-canvas"></canvas></div></div>
                </div>
             </section>
-
+            
             <!-- Divider -->
             <hr class="my-12 border-gray-200">
 
@@ -172,15 +171,15 @@
                 </label>
                 <input type="file" id="csv-upload" class="hidden" accept=".csv">
             </section>
-             <div id="log-output" class="mt-4">
-                <h3 class="text-md font-semibold text-gray-600">Log</h3>
-                <pre id="log-pre" class="debug-area"></pre>
-            </div>
         </main>
     </div>
 
     <script>
-        let issueData = [];
+        let issueData = [
+            { "ID": 12, "Status": "Pending", "Summary": "Data from Power BI vs Print Invoice of JDE system show different", "System": "Power BI", "Description": "Different Unit Price, Discount %, Discount Amount. \n\nNeed Clarify with JDE team to support on this", "Assign To": "Dana Chhun", "Created By": "Virak Prom", "Department": "Tax", "Priority": "P2", "Impact": "High", "Urgency": "Medium", "CreatedDate": "6/4/2025 12:51:00 PM", "Modified": "6/6/2025 12:04 PM", "Modified By": "Dana Chhun", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": "Danish Kokkarani", "Issue Category": "Calculation/Validation", "First Response Time": "6/6/2025 0:51", "Resolution Time": "", "SLA Response Status": "Breached", "SLA Resolution Status": "In Progress"},
+            { "ID": 13, "Status": "Closed", "Summary": "gR in  \" order list view \" not extract excel ", "System": "glassRUN", "Description": "Dear Team, \n\ncurrently, gR in the module \" Order List View \" does not function to extract Excel.\nplease check the attached.\n\nBest Regards,\nReaksa", "Assign To": "Visal Chan", "Created By": "Reaksa Ban", "Department": "Logistic", "Priority": "P3", "Impact": "Medium", "Urgency": "Medium", "CreatedDate": "6/5/2025 10:36:00 AM", "Modified": "6/5/2025 11:31 AM", "Modified By": "LORHENG (Sovanlorheng Thorng)", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null, "Issue Category": "Portal/UI Functionality", "First Response Time": "6/5/2025 11:31", "Resolution Time": "6/5/2025 11:31:00 AM", "SLA Response Status": "Met", "SLA Resolution Status": "Met"},
+            { "ID": 14, "Status": "Closed", "Summary": "Missing T&T menu in Checker's portal", "System": "glassRUN", "Description": "The T&T menu was missed in the checker portal. Please check and refer to the attachment for reference.", "Assign To": "Visal Chan", "Created By": "Visal Chan", "Department": "Logistic", "Priority": "P4", "Impact": "Low", "Urgency": "Low", "CreatedDate": "6/5/2025 10:49:00 AM", "Modified": "6/5/2025 13:03 PM", "Modified By": "LORHENG (Sovanlorheng Thorng)", "Did we test in UAT?": "Yes", "Impacted Distributor": "All Distributors", "Support PIC": null, "Issue Category": "Portal/UI Functionality", "First Response Time": "6/5/2025 11:31", "Resolution Time": "6/5/2025 1:03:00 PM", "SLA Response Status": "Met", "SLA Resolution Status": "Breached"}
+        ];
         const chartInstances = {};
 
         // --- DATA PROCESSING AND RENDERING ---
@@ -253,18 +252,6 @@
                 "P3": { name: "Medium",   icon: "fa-solid fa-equals",              color: "amber" },
                 "P4": { name: "Low",      icon: "fa-solid fa-arrow-down",          color: "sky" }
             };
-
-            function log(message) {
-                console.log(message);
-                const logOutput = document.getElementById('log-output');
-                const logPre = document.getElementById('log-pre');
-                if (logOutput) logOutput.classList.remove('hidden');
-                if (logPre) logPre.textContent = `${new Date().toLocaleTimeString()}: ${message}\n` + logPre.textContent;
-            }
-
-            function showError(message) {
-                log(`ERROR: ${message}`);
-            }
 
             function updateAllVisualizations(currentData) {
                 renderStickyHeader(currentData);
@@ -465,6 +452,29 @@
                         `;
                     });
                     statusHTML += '</div>';
+
+                    const responseMet = issues.filter(d => d['SLA Response Status'] === 'Met').length;
+                    const responseTotal = issues.filter(d => d['SLA Response Status']).length;
+                    const responseSlaPercentage = responseTotal > 0 ? ((responseMet / responseTotal) * 100).toFixed(0) + '%' : 'N/A';
+
+                    const resolutionMet = issues.filter(d => d['SLA Resolution Status'] === 'Met').length;
+                    const resolutionTotal = issues.filter(d => d['SLA Resolution Status']).length;
+                    const resolutionSlaPercentage = resolutionTotal > 0 ? ((resolutionMet / resolutionTotal) * 100).toFixed(0) + '%' : 'N/A';
+
+                    let slaHTML = `
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-500 mb-2">SLA Performance</h4>
+                            <div class="flex justify-between text-sm">
+                                <span>Response SLA:</span>
+                                <span class="font-bold text-green-600">${responseSlaPercentage}</span>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1">
+                                <span>Resolution SLA:</span>
+                                <span class="font-bold text-green-600">${resolutionSlaPercentage}</span>
+                            </div>
+                        </div>
+                    `;
+
                     container.innerHTML += `
                         <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-${style.color}-500">
                             <div class="flex items-center justify-between">
@@ -482,6 +492,7 @@
                                     <div class="flex flex-wrap gap-2">${deptsHTML}</div>
                                 </div>
                             </div>
+                            ${total > 0 ? slaHTML : ''}
                             ${total > 0 ? statusHTML : ''}
                         </div>
                     `;
@@ -527,17 +538,37 @@
                     });
                     statusHTML += '</div>';
 
-                    const priorityCounts = issuesInSystem.reduce((acc, issue) => {
-                        if(issue.Priority) acc[issue.Priority] = (acc[issue.Priority] || 0) + 1;
+                    const departmentCounts = issuesInSystem.reduce((acc, issue) => {
+                        if(issue.Department) acc[issue.Department] = (acc[issue.Department] || 0) + 1;
                         return acc;
                     }, {});
-                    let priorityHTML = '<div class="mt-4 pt-4 border-t border-gray-100"><h4 class="text-sm font-semibold text-gray-500 mb-2">Priority Breakdown</h4><div class="flex flex-wrap gap-2">';
-                    Object.keys(priorityStyles).forEach(priorityKey => {
-                        if (priorityCounts[priorityKey]) {
-                            priorityHTML += `<span class="bg-${priorityStyles[priorityKey].color}-100 text-${priorityStyles[priorityKey].color}-800 text-xs font-semibold px-2 py-1 rounded-full">${priorityKey} (${priorityCounts[priorityKey]})</span>`;
-                        }
+                    let departmentHTML = '<div class="mt-4 pt-4 border-t border-gray-100"><h4 class="text-sm font-semibold text-gray-500 mb-2">Department Breakdown</h4><div class="flex flex-wrap gap-2">';
+                    Object.keys(departmentCounts).sort().forEach(deptName => {
+                        departmentHTML += `<span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">${deptName} (${departmentCounts[deptName]})</span>`;
                     });
-                    priorityHTML += '</div></div>';
+                    departmentHTML += '</div></div>';
+
+                    const responseMet = issuesInSystem.filter(d => d['SLA Response Status'] === 'Met').length;
+                    const responseTotal = issuesInSystem.filter(d => d['SLA Response Status']).length;
+                    const responseSlaPercentage = responseTotal > 0 ? ((responseMet / responseTotal) * 100).toFixed(0) + '%' : 'N/A';
+
+                    const resolutionMet = issuesInSystem.filter(d => d['SLA Resolution Status'] === 'Met').length;
+                    const resolutionTotal = issuesInSystem.filter(d => d['SLA Resolution Status']).length;
+                    const resolutionSlaPercentage = resolutionTotal > 0 ? ((resolutionMet / resolutionTotal) * 100).toFixed(0) + '%' : 'N/A';
+
+                    let slaHTML = `
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h4 class="text-sm font-semibold text-gray-500 mb-2">SLA Performance</h4>
+                            <div class="flex justify-between text-sm">
+                                <span>Response SLA:</span>
+                                <span class="font-bold text-green-600">${responseSlaPercentage}</span>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1">
+                                <span>Resolution SLA:</span>
+                                <span class="font-bold text-green-600">${resolutionSlaPercentage}</span>
+                            </div>
+                        </div>
+                    `;
 
                     container.innerHTML += `
                         <div class="bg-white p-6 rounded-xl shadow-md w-80 flex-shrink-0 flex flex-col">
@@ -549,7 +580,8 @@
                                     </div>
                                     <span class="bg-gray-200 text-gray-800 text-sm font-bold px-2.5 py-1 rounded-full">${total}</span>
                                 </div>
-                                 ${total > 0 ? priorityHTML : ''}
+                                 ${total > 0 ? departmentHTML : ''}
+                                 ${total > 0 ? slaHTML : ''}
                            </div>
                            <div class="mt-auto">
                                 ${total > 0 ? statusHTML : '<p class="text-sm text-gray-400 mt-4">No issues reported.</p>'}
@@ -745,7 +777,6 @@
                     .join('text')
                     .attr('class', 'slice-label')
                     .attr('transform', d => `translate(${arc.centroid(d)})`)
-                    .attr('text-anchor', 'middle')
                     .attr('dy', '0.35em')
                     .style('fill', 'white')
                     .style('font-size', '12px')
@@ -780,9 +811,6 @@
                 });
             }
             
-            // --- RENDER TICKETS BY DATE CHART (NOW EMPTY) ---
-            function renderTicketsByDateChart(data) {}
-
              // --- RENDER ISSUE CATEGORY ANALYSIS CHART ---
             function renderIssueCategoryChart(data) {
                 const container = d3.select("#issue-category-chart-container");
@@ -1026,6 +1054,108 @@
                     legendContainer.appendChild(legendItem);
                 });
 
+            }
+            
+            // --- RENDER SLA CHARTS ---
+            function renderSlaCharts(data) {
+                const renderDonut = (containerId, title, slaData) => {
+                    const container = d3.select(`#${containerId}`);
+                    container.html("");
+
+                    const tooltip = d3.select("body").append("div").attr("class", "chart-tooltip");
+
+                    const processedData = Array.from(d3.group(slaData, d => d), ([name, {length}]) => ({ name, count: length }))
+                                             .sort((a,b) => b.count - a.count);
+
+                    const totalIssuesInChart = d3.sum(processedData, d => d.count);
+                    if (totalIssuesInChart === 0) {
+                        container.append("p").attr("class", "text-gray-500 text-center").text("No data available.");
+                        return;
+                    }
+
+                    const width = 300, height = 300, margin = 20;
+                    const radius = Math.min(width, height) / 2 - margin;
+                    
+                    const svg = container.append("div").attr("class", "relative")
+                        .append("svg")
+                        .attr("width", width)
+                        .attr("height", height)
+                        .append("g")
+                        .attr("transform", `translate(${width/2},${height/2})`);
+                    
+                    const color = d3.scaleOrdinal()
+                        .domain(processedData.map(d => d.name))
+                        .range(['#22C55E', '#EF4444', '#F59E0B']); // Met, Breached, In Progress
+
+                    const pie = d3.pie().value(d => d.count).sort(null);
+                    const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
+                    
+                    const arcs = pie(processedData);
+
+                    svg.selectAll('path')
+                        .data(arcs)
+                        .join('path')
+                        .attr('d', arc)
+                        .attr('fill', d => color(d.data.name))
+                        .attr('stroke', 'white')
+                        .style('stroke-width', '2px')
+                        .on("mouseover", (event, d) => {
+                            tooltip.style("opacity", 1)
+                                .html(`<b>${d.data.name}</b><br>${d.data.count} issues (${((d.data.count / totalIssuesInChart) * 100).toFixed(1)}%)`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                            d3.select(event.currentTarget).transition().duration(200).attr('transform', `scale(1.05)`);
+                        })
+                        .on("mouseout", (event, d) => {
+                            tooltip.style("opacity", 0);
+                            d3.select(event.currentTarget).transition().duration(200).attr('transform', `scale(1)`);
+                        });
+
+                    svg.selectAll('text.slice-label')
+                        .data(arcs)
+                        .join('text')
+                        .attr('class', 'slice-label')
+                        .attr('transform', d => `translate(${arc.centroid(d)})`)
+                        .attr('dy', '0.35em')
+                        .style('fill', 'white')
+                        .style('font-size', '12px')
+                        .style('font-weight', 'bold')
+                        .text(d => `${((d.data.count / totalIssuesInChart) * 100).toFixed(0)}%`);
+
+                    svg.append('text')
+                        .attr('text-anchor', 'middle')
+                        .attr('dy', '-0.5em')
+                        .style('font-size', '2.5rem')
+                        .style('font-weight', 'bold')
+                        .style('fill', '#1f2937')
+                        .text(totalIssuesInChart);
+                    svg.append('text')
+                        .attr('text-anchor', 'middle')
+                        .attr('dy', '1em')
+                        .style('font-size', '0.9rem')
+                        .style('fill', '#6b7280')
+                        .text('Total Issues');
+                    
+                    const legendContainer = container.append('div')
+                                .attr('class', 'grid grid-cols-2 gap-x-6 gap-y-3 mt-4');
+                            
+                    processedData.forEach((d) => {
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'flex items-center';
+                        legendItem.innerHTML = `
+                            <div class="w-4 h-4 rounded-sm mr-2" style="background-color: ${color(d.name)}"></div>
+                            <span class="text-sm text-gray-700">${d.name} (${d.count})</span>
+                        `;
+                        legendContainer.node().appendChild(legendItem);
+                    });
+
+                };
+
+                const responseSlaData = data.map(d => d['SLA Response Status']).filter(Boolean);
+                const resolutionSlaData = data.map(d => d['SLA Resolution Status']).filter(Boolean);
+
+                renderDonut('response-sla-chart-container', 'Response SLA Status', responseSlaData);
+                renderDonut('resolution-sla-chart-container', 'Resolution SLA Status', resolutionSlaData);
             }
             
             // --- RENDER CREATE VS RESOLVE CHARTS (Chart.js) ---
