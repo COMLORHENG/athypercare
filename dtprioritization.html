@@ -22,6 +22,7 @@
         .result-card {
             transition: all 0.3s ease-in-out;
             transform-style: preserve-3d;
+            position: relative; /* Added for positioning children */
         }
         .result-card.flipped {
             transform: rotateY(180deg);
@@ -29,6 +30,9 @@
         .card-face {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            position: absolute; /* Added to stack cards */
+            width: 100%;
+            height: 100%;
         }
         .card-back {
             transform: rotateY(180deg);
@@ -127,33 +131,10 @@
             </div>
 
             <!-- RESULTS SECTION -->
-            <div class="relative">
-                <div class="result-card sticky top-8">
-                    <!-- Front of the card -->
-                    <div class="card-face w-full h-full bg-green-600 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
-                        <div>
-                           <h2 class="text-2xl font-bold mb-1 border-b border-green-400 pb-4">2. See The Result</h2>
-                           <p id="resultProjectName" class="text-center text-xl font-semibold mt-4 truncate"></p>
-                        </div>
-                        
-                        <div class="my-2">
-                            <p id="summarySentence" class="text-center text-green-100 italic px-4"></p>
-                        </div>
-
-                        <div class="text-center my-2">
-                            <p class="text-lg text-green-200">Final Priority Score</p>
-                            <p id="finalScore" class="text-7xl md:text-8xl font-bold tracking-tighter"></p>
-                        </div>
-                        
-                        <div>
-                            <p class="text-center text-sm text-green-200 mb-2">Calculation: (Classification + Value + Ease Of Execution) * MTs Commitment</p>
-                            <div id="calculation" class="text-center text-2xl font-mono bg-green-700 p-3 rounded-lg"></div>
-                            <button id="flipButton" class="w-full mt-4 text-center text-green-200 hover:text-white transition">Show Score Breakdown &rarr;</button>
-                        </div>
-                    </div>
-
-                    <!-- Back of the card -->
-                    <div class="card-face card-back w-full h-full bg-gray-800 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
+            <div class="sticky top-8 h-[520px]"> <!-- Container with fixed height for stable sticky positioning -->
+                <div class="result-card w-full h-full">
+                    <!-- Back of the card (now first in HTML) -->
+                    <div class="card-face card-back bg-gray-800 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
                         <div>
                             <h2 class="text-2xl font-bold mb-4 border-b border-gray-600 pb-4">Score Breakdown</h2>
                             <div class="space-y-3 text-lg">
@@ -179,6 +160,29 @@
                         <div id="explanation" class="mt-4 text-center bg-gray-700 p-3 rounded-lg text-gray-300"></div>
                         <button id="flipBackButton" class="w-full mt-4 text-center text-gray-400 hover:text-white transition">&larr; Back to Final Score</button>
                     </div>
+                    
+                    <!-- Front of the card (now second in HTML) -->
+                    <div class="card-face bg-green-600 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
+                        <div>
+                           <h2 class="text-2xl font-bold mb-1 border-b border-green-400 pb-4">2. See The Result</h2>
+                           <p id="resultProjectName" class="text-center text-xl font-semibold mt-4 truncate"></p>
+                        </div>
+                        
+                        <div class="my-2">
+                            <p id="summarySentence" class="text-center text-green-100 italic px-4"></p>
+                        </div>
+
+                        <div class="text-center my-2">
+                            <p class="text-lg text-green-200">Final Priority Score</p>
+                            <p id="finalScore" class="text-7xl md:text-8xl font-bold tracking-tighter"></p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-center text-sm text-green-200 mb-2">Calculation: (Classification + Value + Ease Of Execution) * MTs Commitment</p>
+                            <div id="calculation" class="text-center text-2xl font-mono bg-green-700 p-3 rounded-lg"></div>
+                            <button id="flipButton" class="w-full mt-4 text-center text-green-200 hover:text-white transition">Show Score Breakdown &rarr;</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -188,11 +192,10 @@
     <script>
         // --- DOM ELEMENTS ---
         const projectNameInput = document.getElementById('projectName');
-        const classificationRadios = document.querySelectorAll('input[name="classification"]');
         const valueGroups = document.querySelectorAll('.value-group');
         
         const resultProjectName = document.getElementById('resultProjectName');
-        const summarySentenceDisplay = document.getElementById('summarySentence'); // New element
+        const summarySentenceDisplay = document.getElementById('summarySentence');
         const finalScoreDisplay = document.getElementById('finalScore');
         const calculationDisplay = document.getElementById('calculation');
         const classScoreDisplay = document.getElementById('classScore');
@@ -228,7 +231,7 @@
                 const selectedRadio = document.querySelector('input[name="value_cost"]:checked');
                 value = selectedRadio.value;
                 valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
-            } else {
+            } else { // Improve Productivity
                 const selectedRadio = document.querySelector('input[name="value_prod"]:checked');
                 value = selectedRadio.value;
                 valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
@@ -275,18 +278,19 @@
 
         // --- EVENT LISTENERS ---
 
-        // Update on any input change
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('change', calculateAndDisplay);
-        });
-        projectNameInput.addEventListener('input', calculateAndDisplay);
-
-        // Handle showing/hiding value groups
-        classificationRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                // Get the unique part from the radio ID (e.g., "growth", "cost", "prod")
-                const suffix = radio.id.split('_')[1];
-                const targetGroupId = `value_${suffix}`;
+        // Centralized handler for all radio button changes
+        function handleRadioChange(event) {
+            // If the changed input is a classification radio, handle visibility
+            if (event.target.name === 'classification') {
+                const selectedValue = event.target.value;
+                let targetGroupId;
+                if (selectedValue === 'Growth') {
+                    targetGroupId = 'value_growth';
+                } else if (selectedValue === 'Cost Saving') {
+                    targetGroupId = 'value_cost';
+                } else { // Improve Productivity
+                    targetGroupId = 'value_prod';
+                }
 
                 valueGroups.forEach(group => {
                     if (group.id === targetGroupId) {
@@ -295,7 +299,16 @@
                         group.classList.add('hidden');
                     }
                 });
-            });
+            }
+            
+            // Run the calculation after any change
+            calculateAndDisplay();
+        }
+
+        // Attach listeners
+        projectNameInput.addEventListener('input', calculateAndDisplay); // For live typing
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', handleRadioChange);
         });
 
         // Card flip logic
