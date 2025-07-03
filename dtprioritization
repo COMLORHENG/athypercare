@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&T Prioritization Framework Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for radio buttons */
+        .radio-label {
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="radio"]:checked + .radio-label {
+            background-color: #16a34a; /* green-600 */
+            color: white;
+            border-color: #16a34a; /* green-600 */
+        }
+        .result-card {
+            transition: all 0.3s ease-in-out;
+            transform-style: preserve-3d;
+        }
+        .result-card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">D&T Prioritization Framework Playground</h1>
+            <p class="mt-2 text-lg text-gray-600">Select options on the left to see how the priority score changes in real-time.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- CONTROLS SECTION -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 border-b pb-4">1. Define Your Project</h2>
+                
+                <div class="space-y-6">
+                    <!-- Project Name -->
+                    <div>
+                        <label for="projectName" class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                        <input type="text" id="projectName" value="Customer 360" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    </div>
+
+                    <!-- Classification -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Classification</h3>
+                        <div id="classification" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="radio" name="classification" id="class_growth" value="Growth" class="hidden" checked>
+                            <label for="class_growth" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Growth</label>
+                            
+                            <input type="radio" name="classification" id="class_cost" value="Cost Saving" class="hidden">
+                            <label for="class_cost" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Cost Saving</label>
+                            
+                            <input type="radio" name="classification" id="class_prod" value="Improve Productivity" class="hidden">
+                            <label for="class_prod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Productivity</label>
+                        </div>
+                    </div>
+
+                    <!-- Value -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Value</h3>
+                        <div id="value_growth" class="value-group grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="radio" name="value_growth" id="val_growth_high" value="High" class="hidden" checked>
+                            <label for="val_growth_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">High (>1M)</label>
+                            <input type="radio" name="value_growth" id="val_growth_med" value="Medium" class="hidden">
+                            <label for="val_growth_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Medium (500K-1M)</label>
+                            <input type="radio" name="value_growth" id="val_growth_low" value="Low" class="hidden">
+                            <label for="val_growth_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Low (&lt;500K)</label>
+                        </div>
+                        <div id="value_cost" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
+                           <input type="radio" name="value_cost" id="val_cost_high" value="High" class="hidden" checked>
+                            <label for="val_cost_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">High (>200K)</label>
+                            <input type="radio" name="value_cost" id="val_cost_med" value="Medium" class="hidden">
+                            <label for="val_cost_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Medium (100K-200K)</label>
+                            <input type="radio" name="value_cost" id="val_cost_low" value="Low" class="hidden">
+                            <label for="val_cost_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Low (&lt;100K)</label>
+                        </div>
+                        <div id="value_prod" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="radio" name="value_prod" id="val_prod_high" value="High" class="hidden" checked>
+                            <label for="val_prod_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">High (>2K)</label>
+                            <input type="radio" name="value_prod" id="val_prod_med" value="Medium" class="hidden">
+                            <label for="val_prod_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Medium (1K-2K)</label>
+                            <input type="radio" name="value_prod" id="val_prod_low" value="Low" class="hidden">
+                            <label for="val_prod_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Low (&lt;1K)</label>
+                        </div>
+                    </div>
+
+                    <!-- Ease of Execution -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Ease of Execution</h3>
+                        <div id="ease" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="radio" name="ease" id="ease_easy" value="Easy" class="hidden" checked>
+                            <label for="ease_easy" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Easy</label>
+                            <input type="radio" name="ease" id="ease_mod" value="Moderate" class="hidden">
+                            <label for="ease_mod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Moderate</label>
+                            <input type="radio" name="ease" id="ease_hard" value="Hard" class="hidden">
+                            <label for="ease_hard" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Hard</label>
+                        </div>
+                    </div>
+
+                    <!-- MT Commitment -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">MT Commitment</h3>
+                        <div id="commitment" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input type="radio" name="commitment" id="commit_yes" value="Yes" class="hidden" checked>
+                            <label for="commit_yes" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Yes</label>
+                            <input type="radio" name="commitment" id="commit_no" value="No" class="hidden">
+                            <label for="commit_no" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium bg-red-100 border-red-300 hover:bg-red-500 hover:text-white">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS SECTION -->
+            <div class="relative">
+                <div class="result-card sticky top-8">
+                    <!-- Front of the card -->
+                    <div class="card-face w-full h-full bg-green-600 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
+                        <div>
+                           <h2 class="text-2xl font-bold mb-1 border-b border-green-400 pb-4">2. See The Result</h2>
+                           <p id="resultProjectName" class="text-center text-xl font-semibold mt-4 truncate"></p>
+                        </div>
+                        
+                        <div class="my-2">
+                            <p id="summarySentence" class="text-center text-green-100 italic px-4"></p>
+                        </div>
+
+                        <div class="text-center my-2">
+                            <p class="text-lg text-green-200">Final Priority Score</p>
+                            <p id="finalScore" class="text-7xl md:text-8xl font-bold tracking-tighter"></p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-center text-sm text-green-200 mb-2">Calculation: (Classification + Value + Ease Of Execution) * MTs Commitment</p>
+                            <div id="calculation" class="text-center text-2xl font-mono bg-green-700 p-3 rounded-lg"></div>
+                            <button id="flipButton" class="w-full mt-4 text-center text-green-200 hover:text-white transition">Show Score Breakdown &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- Back of the card -->
+                    <div class="card-face card-back w-full h-full bg-gray-800 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-4 border-b border-gray-600 pb-4">Score Breakdown</h2>
+                            <div class="space-y-3 text-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Classification Score</span>
+                                    <span id="classScore" class="font-bold text-2xl bg-gray-700 px-3 py-1 rounded-md"></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Value Score</span>
+                                    <span id="valueScore" class="font-bold text-2xl bg-gray-700 px-3 py-1 rounded-md"></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">Ease of Execution Score</span>
+                                    <span id="easeScore" class="font-bold text-2xl bg-gray-700 px-3 py-1 rounded-md"></span>
+                                </div>
+                                <hr class="border-gray-600 my-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-300">MT Commitment Multiplier</span>
+                                    <span id="commitScore" class="font-bold text-2xl bg-gray-700 px-3 py-1 rounded-md"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="explanation" class="mt-4 text-center bg-gray-700 p-3 rounded-lg text-gray-300"></div>
+                        <button id="flipBackButton" class="w-full mt-4 text-center text-gray-400 hover:text-white transition">&larr; Back to Final Score</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- DOM ELEMENTS ---
+        const projectNameInput = document.getElementById('projectName');
+        const classificationRadios = document.querySelectorAll('input[name="classification"]');
+        const valueGroups = document.querySelectorAll('.value-group');
+        
+        const resultProjectName = document.getElementById('resultProjectName');
+        const summarySentenceDisplay = document.getElementById('summarySentence'); // New element
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const calculationDisplay = document.getElementById('calculation');
+        const classScoreDisplay = document.getElementById('classScore');
+        const valueScoreDisplay = document.getElementById('valueScore');
+        const easeScoreDisplay = document.getElementById('easeScore');
+        const commitScoreDisplay = document.getElementById('commitScore');
+        const explanationDisplay = document.getElementById('explanation');
+        
+        const resultCard = document.querySelector('.result-card');
+        const flipButton = document.getElementById('flipButton');
+        const flipBackButton = document.getElementById('flipBackButton');
+
+        // --- SCORING LOGIC ---
+        const SCORES = {
+            classification: { 'Growth': 3, 'Cost Saving': 2, 'Improve Productivity': 1 },
+            value: { 'High': 3, 'Medium': 2, 'Low': 1 },
+            ease: { 'Easy': 3, 'Moderate': 2, 'Hard': 1 },
+            commitment: { 'Yes': 1, 'No': 0 }
+        };
+
+        // --- MAIN CALCULATION FUNCTION ---
+        function calculateAndDisplay() {
+            // 1. Get current values from inputs
+            const projectName = projectNameInput.value || "Example Project";
+            const classification = document.querySelector('input[name="classification"]:checked').value;
+            
+            let value, valueText;
+            if (classification === 'Growth') {
+                const selectedRadio = document.querySelector('input[name="value_growth"]:checked');
+                value = selectedRadio.value;
+                valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
+            } else if (classification === 'Cost Saving') {
+                const selectedRadio = document.querySelector('input[name="value_cost"]:checked');
+                value = selectedRadio.value;
+                valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
+            } else {
+                const selectedRadio = document.querySelector('input[name="value_prod"]:checked');
+                value = selectedRadio.value;
+                valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
+            }
+
+            const ease = document.querySelector('input[name="ease"]:checked').value;
+            const commitment = document.querySelector('input[name="commitment"]:checked').value;
+
+            // 2. Calculate scores
+            const classScore = SCORES.classification[classification];
+            const valueScore = SCORES.value[value];
+            const easeScore = SCORES.ease[ease];
+            const commitScore = SCORES.commitment[commitment];
+            const finalScore = (classScore + valueScore + easeScore) * commitScore;
+
+            // 3. Update display
+            resultProjectName.textContent = projectName;
+            finalScoreDisplay.textContent = finalScore;
+            
+            classScoreDisplay.textContent = classScore;
+            valueScoreDisplay.textContent = valueScore;
+            easeScoreDisplay.textContent = easeScore;
+            commitScoreDisplay.textContent = `x ${commitScore}`;
+            
+            calculationDisplay.innerHTML = `(<span class="text-yellow-300">${classScore}</span> + <span class="text-yellow-300">${valueScore}</span> + <span class="text-yellow-300">${easeScore}</span>) &times; <span class="text-red-300">${commitScore}</span> = ${finalScore}`;
+
+            // 4. Build and display summary sentence
+            const easeTextMap = { 'Easy': 'easy to execute', 'Moderate': 'moderately difficult to execute', 'Hard': 'hard to execute' };
+            const commitmentTextMap = { 'Yes': 'with strong support from the MT', 'No': 'with no support from the MT' };
+            const classificationText = classification === 'Improve Productivity' ? 'improving Productivity' : `supporting ${classification}`;
+            
+            const summary = `A "${projectName}" project ${classificationText}, providing a potential value of ${valueText}, that is ${easeTextMap[ease]} and ${commitmentTextMap[commitment]}.`;
+            summarySentenceDisplay.textContent = summary;
+
+            // 5. Update explanation text
+            if (commitScore === 0) {
+                explanationDisplay.textContent = "Without Management Team commitment, the project score is always zero, making it a low priority regardless of other factors.";
+                finalScoreDisplay.classList.add('text-red-400');
+            } else {
+                explanationDisplay.textContent = "A high score indicates a valuable and feasible project with strong backing. This should be a top priority.";
+                 finalScoreDisplay.classList.remove('text-red-400');
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+
+        // Update on any input change
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('change', calculateAndDisplay);
+        });
+        projectNameInput.addEventListener('input', calculateAndDisplay);
+
+        // Handle showing/hiding value groups
+        classificationRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                // Get the unique part from the radio ID (e.g., "growth", "cost", "prod")
+                const suffix = radio.id.split('_')[1];
+                const targetGroupId = `value_${suffix}`;
+
+                valueGroups.forEach(group => {
+                    if (group.id === targetGroupId) {
+                        group.classList.remove('hidden');
+                    } else {
+                        group.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Card flip logic
+        flipButton.addEventListener('click', () => {
+            resultCard.classList.add('flipped');
+        });
+        flipBackButton.addEventListener('click', () => {
+            resultCard.classList.remove('flipped');
+        });
+
+        // --- INITIAL CALCULATION ---
+        window.addEventListener('load', calculateAndDisplay);
+
+    </script>
+</body>
+</html>
