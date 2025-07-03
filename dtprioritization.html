@@ -13,6 +13,9 @@
         /* Custom styles for radio buttons */
         .radio-label {
             transition: all 0.2s ease-in-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         input[type="radio"]:checked + .radio-label {
             background-color: #16a34a; /* green-600 */
@@ -22,7 +25,7 @@
         .result-card {
             transition: all 0.3s ease-in-out;
             transform-style: preserve-3d;
-            position: relative; /* Added for positioning children */
+            position: relative;
         }
         .result-card.flipped {
             transform: rotateY(180deg);
@@ -30,12 +33,31 @@
         .card-face {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            position: absolute; /* Added to stack cards */
+            position: absolute;
             width: 100%;
             height: 100%;
         }
         .card-back {
             transform: rotateY(180deg);
+        }
+        .score-indicator {
+            background-color: #ecfdf5; /* green-50 */
+            color: #166534; /* green-800 */
+            padding: 0.125rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            opacity: 0.4;
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="radio"]:checked + .radio-label .score-indicator {
+            opacity: 1;
+            background-color: #dcfce7; /* green-100 */
+            color: #15803d; /* green-700 */
+            transform: scale(1.1);
+        }
+        #quadrant-dot {
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
     </style>
 </head>
@@ -44,13 +66,13 @@
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">D&T Prioritization Framework Playground</h1>
-            <p class="mt-2 text-lg text-gray-600">Select options on the left to see how the priority score changes in real-time.</p>
+            <p class="mt-2 text-lg text-gray-600">Select options below to see how the priority score changes in real-time.</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             <!-- CONTROLS SECTION -->
-            <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="bg-white p-6 rounded-xl shadow-lg row-span-2">
                 <h2 class="text-2xl font-bold mb-6 border-b pb-4">1. Define Your Project</h2>
                 
                 <div class="space-y-6">
@@ -62,76 +84,88 @@
 
                     <!-- Classification -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Classification</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                            <span>Classification</span>
+                        </h3>
                         <div id="classification" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <input type="radio" name="classification" id="class_growth" value="Growth" class="hidden" checked>
-                            <label for="class_growth" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Growth</label>
+                            <label for="class_growth" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Growth</span><span class="score-indicator">+3</span></label>
                             
                             <input type="radio" name="classification" id="class_cost" value="Cost Saving" class="hidden">
-                            <label for="class_cost" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Cost Saving</label>
+                            <label for="class_cost" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Cost Saving</span><span class="score-indicator">+2</span></label>
                             
                             <input type="radio" name="classification" id="class_prod" value="Improve Productivity" class="hidden">
-                            <label for="class_prod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Productivity</label>
+                            <label for="class_prod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Productivity</span><span class="score-indicator">+1</span></label>
                         </div>
                     </div>
 
                     <!-- Value -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Value</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                            <span>Value</span>
+                        </h3>
                         <div id="value_growth" class="value-group grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <input type="radio" name="value_growth" id="val_growth_high" value="High" class="hidden" checked>
-                            <label for="val_growth_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">High (>1M)</label>
+                            <label for="val_growth_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>High (>1M)</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="value_growth" id="val_growth_med" value="Medium" class="hidden">
-                            <label for="val_growth_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Medium (500K-1M)</label>
+                            <label for="val_growth_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Med (500K-1M)</span><span class="score-indicator">+2</span></label>
                             <input type="radio" name="value_growth" id="val_growth_low" value="Low" class="hidden">
-                            <label for="val_growth_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Low (&lt;500K)</label>
+                            <label for="val_growth_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Low (&lt;500K)</span><span class="score-indicator">+1</span></label>
                         </div>
                         <div id="value_cost" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
                            <input type="radio" name="value_cost" id="val_cost_high" value="High" class="hidden" checked>
-                            <label for="val_cost_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">High (>200K)</label>
+                            <label for="val_cost_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>High (>200K)</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="value_cost" id="val_cost_med" value="Medium" class="hidden">
-                            <label for="val_cost_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Medium (100K-200K)</label>
+                            <label for="val_cost_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Med (100-200K)</span><span class="score-indicator">+2</span></label>
                             <input type="radio" name="value_cost" id="val_cost_low" value="Low" class="hidden">
-                            <label for="val_cost_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Low (&lt;100K)</label>
+                            <label for="val_cost_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Low (&lt;100K)</span><span class="score-indicator">+1</span></label>
                         </div>
                         <div id="value_prod" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <input type="radio" name="value_prod" id="val_prod_high" value="High" class="hidden" checked>
-                            <label for="val_prod_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">High (>2K)</label>
+                            <label for="val_prod_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>High (>2K)</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="value_prod" id="val_prod_med" value="Medium" class="hidden">
-                            <label for="val_prod_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Medium (1K-2K)</label>
+                            <label for="val_prod_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Med (1K-2K)</span><span class="score-indicator">+2</span></label>
                             <input type="radio" name="value_prod" id="val_prod_low" value="Low" class="hidden">
-                            <label for="val_prod_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Low (&lt;1K)</label>
+                            <label for="val_prod_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Low (&lt;1K)</span><span class="score-indicator">+1</span></label>
                         </div>
                     </div>
 
                     <!-- Ease of Execution -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Ease of Execution</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                            <span>Ease of Execution</span>
+                        </h3>
                         <div id="ease" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <input type="radio" name="ease" id="ease_easy" value="Easy" class="hidden" checked>
-                            <label for="ease_easy" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Easy</label>
+                            <label for="ease_easy" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Easy</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="ease" id="ease_mod" value="Moderate" class="hidden">
-                            <label for="ease_mod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Moderate</label>
+                            <label for="ease_mod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Moderate</span><span class="score-indicator">+2</span></label>
                             <input type="radio" name="ease" id="ease_hard" value="Hard" class="hidden">
-                            <label for="ease_hard" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Hard</label>
+                            <label for="ease_hard" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Hard</span><span class="score-indicator">+1</span></label>
                         </div>
                     </div>
 
                     <!-- MT Commitment -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">MT Commitment</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-1.78-4.125a6 6 0 00-9.44-1.684" /></svg>
+                            <span>MT Commitment</span>
+                        </h3>
                         <div id="commitment" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <input type="radio" name="commitment" id="commit_yes" value="Yes" class="hidden" checked>
-                            <label for="commit_yes" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium">Yes</label>
+                            <label for="commit_yes" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Yes</span><span class="score-indicator">x1</span></label>
                             <input type="radio" name="commitment" id="commit_no" value="No" class="hidden">
-                            <label for="commit_no" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium bg-red-100 border-red-300 hover:bg-red-500 hover:text-white">No</label>
+                            <label for="commit_no" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>No</span><span class="score-indicator">x0</span></label>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- RESULTS SECTION -->
-            <div class="sticky top-8 h-[520px]"> <!-- Container with fixed height for stable sticky positioning -->
+            <div class="sticky top-8 h-[550px]"> <!-- Container with fixed height for stable sticky positioning -->
                 <div class="result-card w-full h-full">
                     <!-- Back of the card (now first in HTML) -->
                     <div class="card-face card-back bg-gray-800 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
@@ -175,6 +209,10 @@
                         <div class="text-center my-2">
                             <p class="text-lg text-green-200">Final Priority Score</p>
                             <p id="finalScore" class="text-7xl md:text-8xl font-bold tracking-tighter"></p>
+                            <div class="w-full bg-green-700 rounded-full h-2.5 mt-2">
+                                <div id="scoreGauge" class="bg-yellow-300 h-2.5 rounded-full transition-all duration-500"></div>
+                            </div>
+                            <p id="scoreLabel" class="text-sm font-semibold mt-1 text-green-200"></p>
                         </div>
                         
                         <div>
@@ -185,7 +223,53 @@
                     </div>
                 </div>
             </div>
-
+            
+            <!-- NEW VISUALIZATION SECTION -->
+            <div class="bg-white p-6 rounded-xl shadow-lg lg:col-span-2">
+                 <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                    <span>3. Analyze the Project</span>
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Quadrant Chart -->
+                    <div>
+                        <h3 id="quadrantTitle" class="text-lg font-semibold text-gray-800 mb-2 text-center"></h3>
+                        <div class="relative">
+                            <svg id="quadrant-chart" viewBox="0 0 100 100" class="w-full h-full bg-gray-50 rounded-lg">
+                                <!-- Quadrant Backgrounds -->
+                                <rect x="50" y="0" width="50" height="50" fill="#dcfce7" /> <!-- Top Right -->
+                                <rect x="0" y="0" width="50" height="50" fill="#fef3c7" /> <!-- Top Left -->
+                                <rect x="50" y="50" width="50" height="50" fill="#fee2e2" /> <!-- Bottom Right -->
+                                <rect x="0" y="50" width="50" height="50" fill="#f3f4f6" /> <!-- Bottom Left -->
+                                <!-- Axes -->
+                                <line x1="50" y1="0" x2="50" y2="100" stroke="#d1d5db" stroke-width="0.5"/>
+                                <line x1="0" y1="50" x2="100" y2="50" stroke="#d1d5db" stroke-width="0.5"/>
+                                <!-- Labels -->
+                                <text x="75" y="8" font-size="5" text-anchor="middle" class="font-semibold fill-green-800">Do Now</text>
+                                <text x="25" y="8" font-size="5" text-anchor="middle" class="font-semibold fill-amber-800">Plan For Later</text>
+                                <text x="75" y="96" font-size="5" text-anchor="middle" class="font-semibold fill-red-800">Re-evaluate</text>
+                                <text x="25" y="96" font-size="5" text-anchor="middle" class="font-semibold fill-gray-800">Don't Do</text>
+                                <text x="50" y="48" font-size="3" text-anchor="middle" class="fill-gray-500">Value</text>
+                                <text x="5" y="48" font-size="3" text-anchor="start" class="fill-gray-500">Low</text>
+                                <text x="95" y="48" font-size="3" text-anchor="end" class="fill-gray-500">High</text>
+                                <text transform="rotate(-90 52 50)" x="52" y="50" font-size="3" text-anchor="middle" class="fill-gray-500">Feasibility</text>
+                                <text transform="rotate(-90 52 95)" x="52" y="95" font-size="3" text-anchor="start" class="fill-gray-500">Low</text>
+                                <text transform="rotate(-90 52 5)" x="52" y="5" font-size="3" text-anchor="end" class="fill-gray-500">High</text>
+                                <!-- Dot -->
+                                <circle id="quadrant-dot" cx="0" cy="0" r="3" fill="#16a34a" stroke="white" stroke-width="0.5"/>
+                            </svg>
+                        </div>
+                         <p id="quadrantDescription" class="text-sm text-center text-gray-600 mt-2 h-10"></p>
+                    </div>
+                    <!-- What-If Scenarios -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Improvement Suggestions</h3>
+                        <div id="whatIf" class="space-y-3">
+                           <!-- Suggestions will be added here by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -197,6 +281,8 @@
         const resultProjectName = document.getElementById('resultProjectName');
         const summarySentenceDisplay = document.getElementById('summarySentence');
         const finalScoreDisplay = document.getElementById('finalScore');
+        const scoreGauge = document.getElementById('scoreGauge');
+        const scoreLabel = document.getElementById('scoreLabel');
         const calculationDisplay = document.getElementById('calculation');
         const classScoreDisplay = document.getElementById('classScore');
         const valueScoreDisplay = document.getElementById('valueScore');
@@ -207,6 +293,11 @@
         const resultCard = document.querySelector('.result-card');
         const flipButton = document.getElementById('flipButton');
         const flipBackButton = document.getElementById('flipBackButton');
+
+        const quadrantDot = document.getElementById('quadrant-dot');
+        const quadrantTitle = document.getElementById('quadrantTitle');
+        const quadrantDescription = document.getElementById('quadrantDescription');
+        const whatIfContainer = document.getElementById('whatIf');
 
         // --- SCORING LOGIC ---
         const SCORES = {
@@ -226,15 +317,15 @@
             if (classification === 'Growth') {
                 const selectedRadio = document.querySelector('input[name="value_growth"]:checked');
                 value = selectedRadio.value;
-                valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
+                valueText = document.querySelector(`label[for="${selectedRadio.id}"] > span:first-child`).textContent;
             } else if (classification === 'Cost Saving') {
                 const selectedRadio = document.querySelector('input[name="value_cost"]:checked');
                 value = selectedRadio.value;
-                valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
+                valueText = document.querySelector(`label[for="${selectedRadio.id}"] > span:first-child`).textContent;
             } else { // Improve Productivity
                 const selectedRadio = document.querySelector('input[name="value_prod"]:checked');
                 value = selectedRadio.value;
-                valueText = document.querySelector(`label[for="${selectedRadio.id}"]`).textContent;
+                valueText = document.querySelector(`label[for="${selectedRadio.id}"] > span:first-child`).textContent;
             }
 
             const ease = document.querySelector('input[name="ease"]:checked').value;
@@ -273,6 +364,87 @@
             } else {
                 explanationDisplay.textContent = "A high score indicates a valuable and feasible project with strong backing. This should be a top priority.";
                  finalScoreDisplay.classList.remove('text-red-400');
+            }
+            
+            // 6. Update Score Gauge
+            const maxScore = 9;
+            const scorePercentage = (finalScore / maxScore) * 100;
+            scoreGauge.style.width = `${scorePercentage}%`;
+            if (finalScore >= 7) {
+                scoreLabel.textContent = "Top Priority";
+                scoreGauge.style.backgroundColor = '#22c55e'; // green-500
+            } else if (finalScore >= 4) {
+                scoreLabel.textContent = "Medium Priority";
+                scoreGauge.style.backgroundColor = '#facc15'; // yellow-400
+            } else {
+                scoreLabel.textContent = "Low Priority";
+                scoreGauge.style.backgroundColor = '#f87171'; // red-400
+            }
+
+            // 7. Update Quadrant Chart
+            const totalValue = classScore + valueScore; // Max 6
+            const feasibility = easeScore; // Max 3
+            // Map scores to 0-100 coordinates. Add small offset to avoid edges.
+            const x = (feasibility - 1) * (90 / 2) + 10; // Map 1-3 to 10-100
+            const y = 100 - ((totalValue - 2) * (90 / 4) + 10); // Map 2-6 to 10-100, inverted Y
+            quadrantDot.setAttribute('cx', x);
+            quadrantDot.setAttribute('cy', y);
+            
+            // 8. Update Quadrant Title and Description with NEW, SIMPLER TERMS
+            let quadrantName, quadrantDescText, quadrantColor;
+            if (x >= 50 && y < 50) {
+                quadrantName = "Do Now";
+                quadrantDescText = "High value and easy to do. These are your top priorities.";
+                quadrantColor = "text-green-700";
+            } else if (x < 50 && y < 50) {
+                quadrantName = "Plan For Later";
+                quadrantDescText = "High value, but hard to do. These are important long-term goals that need careful planning.";
+                quadrantColor = "text-amber-700";
+            } else if (x >= 50 && y >= 50) {
+                quadrantName = "Re-evaluate";
+                quadrantDescText = "Easy to do, but low value. Re-evaluate if its benefits can be increased before proceeding.";
+                quadrantColor = "text-red-700";
+            } else { // x < 50 && y >= 50
+                quadrantName = "Don't Do";
+                quadrantDescText = "Low value and hard to do. These projects should be avoided.";
+                quadrantColor = "text-gray-700";
+            }
+            quadrantTitle.innerHTML = `Current Quadrant: <span class="font-bold ${quadrantColor}">${quadrantName}</span>`;
+            quadrantDescription.textContent = quadrantDescText;
+
+
+            // 9. Update What-If Scenarios
+            whatIfContainer.innerHTML = ''; // Clear old suggestions
+            let suggestions = [];
+
+            if (commitScore === 0) {
+                const potentialScore = (classScore + valueScore + easeScore) * 1;
+                suggestions.push({text: `If you gain MT Commitment, your score would jump from 0 to <strong>${potentialScore}</strong>.`, icon: '🤝'});
+            } else {
+                if (easeScore < 3) {
+                    const potentialScore = (classScore + valueScore + 3) * commitScore;
+                    const gain = potentialScore - finalScore;
+                    suggestions.push({text: `Improving Ease of Execution to 'Easy' would raise your score by <strong>+${gain}</strong>.`, icon: '🚀'});
+                }
+                if (valueScore < 3) {
+                    const potentialScore = (classScore + 3 + easeScore) * commitScore;
+                    const gain = potentialScore - finalScore;
+                    suggestions.push({text: `Increasing the project's Value to 'High' would raise your score by <strong>+${gain}</strong>.`, icon: '💰'});
+                }
+            }
+
+            if (suggestions.length === 0 && commitScore > 0) {
+                whatIfContainer.innerHTML = `<div class="flex items-center gap-3 p-3 bg-green-100 text-green-800 rounded-lg text-sm">
+                    <span class="text-xl">🎉</span>
+                    <span>This project is already well-optimized according to the framework!</span>
+                </div>`;
+            } else {
+                suggestions.forEach(s => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<span class="text-xl">${s.icon}</span> <span>${s.text}</span>`;
+                    div.className = 'flex items-center gap-3 p-3 bg-blue-100 text-blue-800 rounded-lg text-sm';
+                    whatIfContainer.appendChild(div);
+                });
             }
         }
 
