@@ -6,6 +6,12 @@
     <title>D&T Prioritization Framework Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Intro.js for guided tour -->
+    <link rel="stylesheet" href="https://unpkg.com/intro.js/minified/introjs.min.css">
+    <script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
+    <!-- jsPDF and html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -59,37 +65,87 @@
         #quadrant-dot {
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.5s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .info-modal {
+            transition: opacity 0.3s ease;
+        }
+        .modal-tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+        }
+        .modal-tab.active {
+            border-color: #16a34a;
+            color: #16a34a;
+            font-weight: 600;
+        }
+        /* Intro.js custom theme */
+        .introjs-tooltip {
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .introjs-button {
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+        }
+        .introjs-nextbutton {
+            background-color: #16a34a;
+            text-shadow: none;
+            border-color: #16a34a;
+        }
+         .introjs-nextbutton:hover {
+            background-color: #15803d;
+        }
+        .introjs-prevbutton, .introjs-skipbutton {
+             border-color: #d1d5db;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8">
+    <div id="capture-area" class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">D&T Prioritization Framework Playground</h1>
-            <p class="mt-2 text-lg text-gray-600">Select options below to see how the priority score changes in real-time.</p>
+            <div class="flex justify-center items-center gap-4 mt-2">
+                <p class="text-lg text-gray-600">Select options below to see how the priority score changes in real-time.</p>
+                <button id="startTourBtn" class="bg-green-600 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-green-700 transition">? Start Tour</button>
+            </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             <!-- CONTROLS SECTION -->
-            <div class="bg-white p-6 rounded-xl shadow-lg row-span-2">
+            <div id="controls-panel" class="bg-white p-6 rounded-xl shadow-lg row-span-2" data-step="1" data-intro="This is the main control panel. Define your project here by filling out all the fields.">
                 <h2 class="text-2xl font-bold mb-6 border-b pb-4">1. Define Your Project</h2>
                 
                 <div class="space-y-6">
                     <!-- Project Name -->
                     <div>
                         <label for="projectName" class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
-                        <input type="text" id="projectName" value="Customer 360" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        <input type="text" id="projectName" value="My Awesome Project" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    
+                    <!-- Project Description -->
+                    <div>
+                        <label for="projectDescription" class="block text-sm font-medium text-gray-700 mb-1">Project Description</label>
+                        <textarea id="projectDescription" rows="3" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="Add a brief description of the project's goals and context..."></textarea>
                     </div>
 
                     <!-- Classification -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                            <span>Classification</span>
-                        </h3>
-                        <div id="classification" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input type="radio" name="classification" id="class_growth" value="Growth" class="hidden" checked>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                <span>Classification</span>
+                            </h3>
+                            <button id="classificationInfoBtn" class="h-6 w-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm hover:bg-gray-300">?</button>
+                        </div>
+                        <div id="classification" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                            <input type="radio" name="classification" id="class_growth" value="Growth" class="hidden">
                             <label for="class_growth" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Growth</span><span class="score-indicator">+3</span></label>
                             
                             <input type="radio" name="classification" id="class_cost" value="Cost Saving" class="hidden">
@@ -102,28 +158,31 @@
 
                     <!-- Value -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                            <span>Value</span>
-                        </h3>
-                        <div id="value_growth" class="value-group grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input type="radio" name="value_growth" id="val_growth_high" value="High" class="hidden" checked>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                                <span>Value</span>
+                            </h3>
+                            <button id="valueInfoBtn" class="h-6 w-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm hover:bg-gray-300">?</button>
+                        </div>
+                        <div id="value_growth" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                            <input type="radio" name="value_growth" id="val_growth_high" value="High" class="hidden">
                             <label for="val_growth_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>High (>1M)</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="value_growth" id="val_growth_med" value="Medium" class="hidden">
                             <label for="val_growth_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Med (500K-1M)</span><span class="score-indicator">+2</span></label>
                             <input type="radio" name="value_growth" id="val_growth_low" value="Low" class="hidden">
                             <label for="val_growth_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Low (&lt;500K)</span><span class="score-indicator">+1</span></label>
                         </div>
-                        <div id="value_cost" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
-                           <input type="radio" name="value_cost" id="val_cost_high" value="High" class="hidden" checked>
+                        <div id="value_cost" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                           <input type="radio" name="value_cost" id="val_cost_high" value="High" class="hidden">
                             <label for="val_cost_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>High (>200K)</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="value_cost" id="val_cost_med" value="Medium" class="hidden">
                             <label for="val_cost_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Med (100-200K)</span><span class="score-indicator">+2</span></label>
                             <input type="radio" name="value_cost" id="val_cost_low" value="Low" class="hidden">
                             <label for="val_cost_low" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Low (&lt;100K)</span><span class="score-indicator">+1</span></label>
                         </div>
-                        <div id="value_prod" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input type="radio" name="value_prod" id="val_prod_high" value="High" class="hidden" checked>
+                        <div id="value_prod" class="value-group hidden grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                            <input type="radio" name="value_prod" id="val_prod_high" value="High" class="hidden">
                             <label for="val_prod_high" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>High (>2K)</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="value_prod" id="val_prod_med" value="Medium" class="hidden">
                             <label for="val_prod_med" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Med (1K-2K)</span><span class="score-indicator">+2</span></label>
@@ -139,7 +198,7 @@
                             <span>Ease of Execution</span>
                         </h3>
                         <div id="ease" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input type="radio" name="ease" id="ease_easy" value="Easy" class="hidden" checked>
+                            <input type="radio" name="ease" id="ease_easy" value="Easy" class="hidden">
                             <label for="ease_easy" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Easy</span><span class="score-indicator">+3</span></label>
                             <input type="radio" name="ease" id="ease_mod" value="Moderate" class="hidden">
                             <label for="ease_mod" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Moderate</span><span class="score-indicator">+2</span></label>
@@ -150,28 +209,39 @@
 
                     <!-- MT Commitment -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-1.78-4.125a6 6 0 00-9.44-1.684" /></svg>
-                            <span>MT Commitment</span>
-                        </h3>
-                        <div id="commitment" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input type="radio" name="commitment" id="commit_yes" value="Yes" class="hidden" checked>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-1.78-4.125a6 6 0 00-9.44-1.684" /></svg>
+                                <span>MT Commitment</span>
+                            </h3>
+                            <button id="commitmentInfoBtn" class="h-6 w-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm hover:bg-gray-300">?</button>
+                        </div>
+                        <div id="commitment" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                            <input type="radio" name="commitment" id="commit_yes" value="Yes" class="hidden">
                             <label for="commit_yes" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>Yes</span><span class="score-indicator">x1</span></label>
                             <input type="radio" name="commitment" id="commit_no" value="No" class="hidden">
                             <label for="commit_no" class="radio-label text-center p-3 border border-gray-300 rounded-md cursor-pointer font-medium"><span>No</span><span class="score-indicator">x0</span></label>
                         </div>
                     </div>
                 </div>
+                <!-- Action Buttons -->
+                <div class="mt-8 pt-6 border-t">
+                    <div class="flex justify-center">
+                         <button id="addToListBtn" class="w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-6 rounded-md hover:bg-green-700 transition disabled:bg-gray-300">
+                           Add to Comparison List
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- RESULTS SECTION -->
-            <div class="sticky top-8 h-[550px]"> <!-- Container with fixed height for stable sticky positioning -->
+            <div id="results-panel" class="h-[550px]" data-step="2" data-intro="Your results appear here instantly. You can see the final score, a summary sentence, and the calculation breakdown.">
                 <div class="result-card w-full h-full">
                     <!-- Back of the card (now first in HTML) -->
                     <div class="card-face card-back bg-gray-800 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
                         <div>
                             <h2 class="text-2xl font-bold mb-4 border-b border-gray-600 pb-4">Score Breakdown</h2>
-                            <div class="space-y-3 text-lg">
+                            <div id="scoreBreakdownContent" class="space-y-3 text-lg">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-300">Classification Score</span>
                                     <span id="classScore" class="font-bold text-2xl bg-gray-700 px-3 py-1 rounded-md"></span>
@@ -197,44 +267,51 @@
                     
                     <!-- Front of the card (now second in HTML) -->
                     <div class="card-face bg-green-600 text-white p-6 rounded-xl shadow-2xl flex flex-col justify-between">
-                        <div>
-                           <h2 class="text-2xl font-bold mb-1 border-b border-green-400 pb-4">2. See The Result</h2>
-                           <p id="resultProjectName" class="text-center text-xl font-semibold mt-4 truncate"></p>
-                        </div>
-                        
-                        <div class="my-2">
-                            <p id="summarySentence" class="text-center text-green-100 italic px-4"></p>
-                        </div>
-
-                        <div class="text-center my-2">
-                            <p class="text-lg text-green-200">Final Priority Score</p>
-                            <p id="finalScore" class="text-7xl md:text-8xl font-bold tracking-tighter"></p>
-                            <div class="w-full bg-green-700 rounded-full h-2.5 mt-2">
-                                <div id="scoreGauge" class="bg-yellow-300 h-2.5 rounded-full transition-all duration-500"></div>
+                        <div id="resultContent">
+                            <div>
+                               <h2 class="text-2xl font-bold mb-1 border-b border-green-400 pb-4">2. See The Result</h2>
+                               <p id="resultProjectName" class="text-center text-xl font-semibold mt-4 truncate"></p>
                             </div>
-                            <p id="scoreLabel" class="text-sm font-semibold mt-1 text-green-200"></p>
+                            
+                            <div class="my-2">
+                                <p id="summarySentence" class="text-center text-green-100 italic px-4"></p>
+                            </div>
+
+                            <div class="text-center my-2">
+                                <p class="text-lg text-green-200">Final Priority Score</p>
+                                <p id="finalScore" class="text-7xl md:text-8xl font-bold tracking-tighter"></p>
+                                <div class="w-full bg-green-700 rounded-full h-2.5 mt-2">
+                                    <div id="scoreGauge" class="bg-yellow-300 h-2.5 rounded-full transition-all duration-500"></div>
+                                </div>
+                                <p id="scoreLabel" class="text-sm font-semibold mt-1 text-green-200"></p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-center text-sm text-green-200 mb-2">Calculation: (Classification + Value + Ease Of Execution) * MTs Commitment</p>
+                                <div id="calculation" class="text-center text-2xl font-mono bg-green-700 p-3 rounded-lg"></div>
+                                <button id="flipButton" class="w-full mt-4 text-center text-green-200 hover:text-white transition">Show Score Breakdown &rarr;</button>
+                            </div>
                         </div>
-                        
-                        <div>
-                            <p class="text-center text-sm text-green-200 mb-2">Calculation: (Classification + Value + Ease Of Execution) * MTs Commitment</p>
-                            <div id="calculation" class="text-center text-2xl font-mono bg-green-700 p-3 rounded-lg"></div>
-                            <button id="flipButton" class="w-full mt-4 text-center text-green-200 hover:text-white transition">Show Score Breakdown &rarr;</button>
+                        <div id="incompleteMessage" class="hidden h-full flex flex-col items-center justify-center text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                            <h3 class="text-2xl font-bold">Waiting for Selections</h3>
+                            <p class="text-green-100 mt-2">Please make a selection in all categories on the left to calculate the project score.</p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- NEW VISUALIZATION SECTION -->
-            <div class="bg-white p-6 rounded-xl shadow-lg lg:col-span-2">
+            <!-- VISUALIZATION & COMPARISON SECTION -->
+            <div id="analysisSection" class="bg-white p-6 rounded-xl shadow-lg lg:col-span-2 hidden" data-step="3" data-intro="Once you have a score, this section helps you analyze it. See where your project lands on the quadrant, its likelihood of being selected, and get suggestions for improvement.">
                  <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
-                    <span>3. Analyze the Project</span>
+                    <span>3. Analyze & Compare</span>
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Quadrant Chart -->
-                    <div>
-                        <h3 id="quadrantTitle" class="text-lg font-semibold text-gray-800 mb-2 text-center"></h3>
-                        <div class="relative">
+                    <div class="flex flex-col items-center">
+                         <h3 id="quadrantTitle" class="text-lg font-semibold text-gray-800 mb-2 text-center"></h3>
+                        <div class="relative w-full max-w-xs mx-auto">
                             <svg id="quadrant-chart" viewBox="0 0 100 100" class="w-full h-full bg-gray-50 rounded-lg">
                                 <!-- Quadrant Backgrounds -->
                                 <rect x="50" y="0" width="50" height="50" fill="#dcfce7" /> <!-- Top Right -->
@@ -249,7 +326,7 @@
                                 <text x="25" y="8" font-size="5" text-anchor="middle" class="font-semibold fill-amber-800">Plan For Later</text>
                                 <text x="75" y="96" font-size="5" text-anchor="middle" class="font-semibold fill-red-800">Re-evaluate</text>
                                 <text x="25" y="96" font-size="5" text-anchor="middle" class="font-semibold fill-gray-800">Don't Do</text>
-                                <text x="50" y="48" font-size="3" text-anchor="middle" class="fill-gray-500">Value</text>
+                                <text x="48" y="48" font-size="3" text-anchor="end" class="fill-gray-500">Value</text>
                                 <text x="5" y="48" font-size="3" text-anchor="start" class="fill-gray-500">Low</text>
                                 <text x="95" y="48" font-size="3" text-anchor="end" class="fill-gray-500">High</text>
                                 <text transform="rotate(-90 52 50)" x="52" y="50" font-size="3" text-anchor="middle" class="fill-gray-500">Feasibility</text>
@@ -261,21 +338,172 @@
                         </div>
                          <p id="quadrantDescription" class="text-sm text-center text-gray-600 mt-2 h-10"></p>
                     </div>
-                    <!-- What-If Scenarios -->
-                    <div>
+                    <!-- Likelihood & Suggestions -->
+                    <div class="flex flex-col">
+                        <div class="flex flex-col items-center justify-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2 text-center">Likelihood of Selection</h3>
+                            <div class="relative w-32 h-32">
+                                <svg class="w-full h-full" viewBox="0 0 36 36">
+                                    <path class="text-gray-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                                    <path id="likelihoodRing" class="text-green-500 progress-ring__circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="100, 100" stroke-dashoffset="100" />
+                                </svg>
+                                <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center">
+                                    <span id="likelihoodPercent" class="text-3xl font-bold text-gray-700">0%</span>
+                                </div>
+                            </div>
+                             <p class="text-sm text-center text-gray-600 mt-2">Based on the final score.</p>
+                        </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Improvement Suggestions</h3>
                         <div id="whatIf" class="space-y-3">
                            <!-- Suggestions will be added here by JS -->
                         </div>
                     </div>
                 </div>
+                <!-- Comparison Table -->
+                <div id="comparisonSection" class="mt-8 pt-6 border-t hidden" data-step="4" data-intro="Add multiple projects to the list to compare them. They will be automatically ranked by score. You can edit, view details, or remove them from here.">
+                    <div class="flex justify-between items-center mb-2">
+                         <h3 class="text-lg font-semibold text-gray-800">Project Comparison</h3>
+                         <div id="exportCenter" class="flex gap-2">
+                            <button id="pdfBtn" class="bg-gray-200 text-gray-700 text-sm font-semibold py-1 px-3 rounded-md hover:bg-gray-300 transition">Export as PDF</button>
+                            <button id="csvBtn" class="bg-gray-200 text-gray-700 text-sm font-semibold py-1 px-3 rounded-md hover:bg-gray-300 transition">Download as CSV</button>
+                         </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="text-center py-2 px-2">#</th>
+                                    <th class="text-left py-2 px-4">Project Name</th>
+                                    <th class="text-center py-2 px-4">Score</th>
+                                    <th class="text-center py-2 px-4">Likelihood</th>
+                                    <th class="text-center py-2 px-4">Quadrant</th>
+                                    <th class="text-center py-2 px-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody">
+                                <!-- Rows will be added here by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODALS -->
+    <div id="classificationModal" class="info-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold">Classification Guidance</h3>
+                <button class="close-modal-btn h-8 w-8 rounded-full hover:bg-gray-200 flex items-center justify-center font-bold">X</button>
+            </div>
+            <div class="flex border-b mb-4">
+                <div class="modal-tab active" data-tab="guidance">Guidance</div>
+                <div class="modal-tab" data-tab="case-study">Case Study</div>
+            </div>
+            <div class="modal-content" data-tab-content="guidance">
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-green-700">Growth</h4>
+                        <p class="text-gray-600 ml-4">Projects that directly increase revenue or market share. <br><em>Example: Launching a new product, improving the sales funnel.</em></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-700">Cost Saving</h4>
+                        <p class="text-gray-600 ml-4">Projects that reduce operational expenses. <br><em>Example: Automating a manual process, optimizing logistics.</em></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-700">Productivity</h4>
+                        <p class="text-gray-600 ml-4">Projects that save employee time and improve internal efficiency. <br><em>Example: A new internal dashboard, a better communication tool.</em></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-content hidden" data-tab-content="case-study">
+                 <h4 class="font-semibold text-gray-800 mb-2">Example: "Mobile App Relaunch"</h4>
+                 <p class="text-gray-600">A team wants to relaunch the company's mobile app. The primary goal is to attract new users and increase in-app purchases. This is a clear **Growth** project. After consulting with sales, they forecast it could generate over $1M in new revenue, making its Value **High**. This makes it a strong candidate for prioritization.</p>
             </div>
         </div>
     </div>
 
+    <div id="valueModal" class="info-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold">How to Estimate Your Project's Value</h3>
+                <button class="close-modal-btn h-8 w-8 rounded-full hover:bg-gray-200 flex items-center justify-center font-bold">X</button>
+            </div>
+             <div class="flex border-b mb-4">
+                <div class="modal-tab active" data-tab="guidance">Guidance</div>
+                <div class="modal-tab" data-tab="case-study">Case Study</div>
+            </div>
+            <div class="modal-content" data-tab-content="guidance">
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-green-700">For Growth Projects:</h4>
+                        <p class="text-gray-600 ml-4">Work with your Sales or Finance team to forecast the potential new revenue from this project over one year.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-700">For Cost Saving Projects:</h4>
+                        <p class="text-gray-600 ml-4">Collaborate with Operations or Finance to calculate the direct costs that will be eliminated by this project annually.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-700">For Productivity Projects:</h4>
+                        <p class="text-gray-600 ml-4">Estimate hours saved per week for an employee, then multiply by the number of employees affected and by 50 work weeks. <br><em>Example: 2 hrs/wk * 20 employees * 50 wks = 2,000 hrs/yr.</em></p>
+                    </div>
+                     <div class="p-3 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
+                        <strong>Key Tip:</strong> These are estimates. The goal is to find the right category (High, Medium, or Low), not to have a perfect number.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-content hidden" data-tab-content="case-study">
+                 <h4 class="font-semibold text-gray-800 mb-2">Example: "Automating Invoice Processing"</h4>
+                 <p class="text-gray-600">The finance team spends 100 hours per week manually processing invoices. A new RPA tool could automate 80% of this work. This is a **Productivity** project.</p>
+                 <p class="text-gray-600 mt-2"><strong>Calculation:</strong> 100 hours/week * 80% * 50 weeks/year = **4,000 hours saved per year**. This puts the project in the **High** value category for Productivity.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="commitmentModal" class="info-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold">MT Commitment Explained</h3>
+                <button class="close-modal-btn h-8 w-8 rounded-full hover:bg-gray-200 flex items-center justify-center font-bold">X</button>
+            </div>
+            <div class="flex border-b mb-4">
+                <div class="modal-tab active" data-tab="guidance">Guidance</div>
+                <div class="modal-tab" data-tab="case-study">Case Study</div>
+            </div>
+            <div class="modal-content" data-tab-content="guidance">
+                <div class="space-y-4">
+                     <p class="text-gray-600">This is the most critical factor. It asks: "Does this project have formal approval and sponsorship from the Management Team?"</p>
+                    <div>
+                        <h4 class="font-semibold text-green-700">Yes</h4>
+                        <p class="text-gray-600 ml-4">Select 'Yes' only if the project has been officially discussed with and approved by the relevant leadership. This implies they support allocating resources (time, budget) to it.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-700">No</h4>
+                        <p class="text-gray-600 ml-4">Select 'No' if the project is just an idea or has not yet received formal sponsorship. Without MT commitment, a project cannot proceed.</p>
+                    </div>
+                     <div class="p-3 bg-red-100 text-red-800 rounded-lg text-sm">
+                        <strong>Important:</strong> If 'No' is selected, the final score will always be <strong>zero</strong>, as this factor is a multiplier.
+                    </div>
+                </div>
+            </div>
+             <div class="modal-content hidden" data-tab-content="case-study">
+                 <h4 class="font-semibold text-gray-800 mb-2">Example: The "Veto" Power</h4>
+                 <p class="text-gray-600">A project might have a perfect score of 9 based on its value and ease of execution. However, if the Management Team decides it doesn't align with the company's current strategy, they will not commit. The final score becomes (3+3+3) * 0 = **0**. This demonstrates that no project can move forward without leadership approval, regardless of its other merits.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer Disclaimer -->
+    <footer class="text-center p-4 mt-8 text-xs text-gray-500">
+         <p><strong>Disclaimer:</strong> This is a playground built by LORHENG to help you understand the D&T framework. Nothing you do on this page will be saved or submitted to D&T. To submit an initiative for H2 priority, please use the <a href="https://heiway.sharepoint.com/:l:/s/ITCambodia-ITChange-PAtoDistributor/FMRUKkieboNMoPZF2LCk6r4B1UgLoRRIfvWoiF7axQ26TQ?nav=MTRmMDEwNDQtMzJmMy00NWZhLTkwMTctNzViNmQwZWZjZWEw" target="_blank" class="font-bold underline hover:text-gray-700">official submission form</a>.</p>
+    </footer>
+
+
     <script>
         // --- DOM ELEMENTS ---
         const projectNameInput = document.getElementById('projectName');
+        const projectDescriptionInput = document.getElementById('projectDescription');
         const valueGroups = document.querySelectorAll('.value-group');
         
         const resultProjectName = document.getElementById('resultProjectName');
@@ -298,8 +526,32 @@
         const quadrantTitle = document.getElementById('quadrantTitle');
         const quadrantDescription = document.getElementById('quadrantDescription');
         const whatIfContainer = document.getElementById('whatIf');
+        const likelihoodRing = document.getElementById('likelihoodRing');
+        const likelihoodPercent = document.getElementById('likelihoodPercent');
+        
+        const resultContent = document.getElementById('resultContent');
+        const incompleteMessage = document.getElementById('incompleteMessage');
+        const analysisSection = document.getElementById('analysisSection');
+        const scoreBreakdownContent = document.getElementById('scoreBreakdownContent');
 
-        // --- SCORING LOGIC ---
+        const classificationModal = document.getElementById('classificationModal');
+        const valueModal = document.getElementById('valueModal');
+        const commitmentModal = document.getElementById('commitmentModal');
+        const classificationInfoBtn = document.getElementById('classificationInfoBtn');
+        const valueInfoBtn = document.getElementById('valueInfoBtn');
+        const commitmentInfoBtn = document.getElementById('commitmentInfoBtn');
+        const closeModalBtns = document.querySelectorAll('.close-modal-btn');
+        
+        const addToListBtn = document.getElementById('addToListBtn');
+        const comparisonSection = document.getElementById('comparisonSection');
+        const comparisonTableBody = document.getElementById('comparisonTableBody');
+        const exportCenter = document.getElementById('exportCenter');
+        const pdfBtn = document.getElementById('pdfBtn');
+        const csvBtn = document.getElementById('csvBtn');
+        const startTourBtn = document.getElementById('startTourBtn');
+
+        // --- STATE & SCORING ---
+        let projectList = [];
         const SCORES = {
             classification: { 'Growth': 3, 'Cost Saving': 2, 'Improve Productivity': 1 },
             value: { 'High': 3, 'Medium': 2, 'Low': 1 },
@@ -307,29 +559,52 @@
             commitment: { 'Yes': 1, 'No': 0 }
         };
 
-        // --- MAIN CALCULATION FUNCTION ---
+        function getSelections() {
+            const classificationRadio = document.querySelector('input[name="classification"]:checked');
+            if (!classificationRadio) return null;
+
+            const classification = classificationRadio.value;
+            let valueRadio = null;
+            if (classification === 'Growth') valueRadio = document.querySelector('input[name="value_growth"]:checked');
+            else if (classification === 'Cost Saving') valueRadio = document.querySelector('input[name="value_cost"]:checked');
+            else valueRadio = document.querySelector('input[name="value_prod"]:checked');
+
+            const easeRadio = document.querySelector('input[name="ease"]:checked');
+            const commitmentRadio = document.querySelector('input[name="commitment"]:checked');
+
+            if (!valueRadio || !easeRadio || !commitmentRadio) return null;
+
+            return {
+                name: projectNameInput.value || "Untitled Project",
+                description: projectDescriptionInput.value,
+                classification,
+                value: valueRadio.value,
+                ease: easeRadio.value,
+                commitment: commitmentRadio.value
+            };
+        }
+
+        // --- MAIN CALCULATION & DISPLAY FUNCTION ---
         function calculateAndDisplay() {
-            // 1. Get current values from inputs
-            const projectName = projectNameInput.value || "Example Project";
-            const classification = document.querySelector('input[name="classification"]:checked').value;
-            
-            let value, valueText;
-            if (classification === 'Growth') {
-                const selectedRadio = document.querySelector('input[name="value_growth"]:checked');
-                value = selectedRadio.value;
-                valueText = document.querySelector(`label[for="${selectedRadio.id}"] > span:first-child`).textContent;
-            } else if (classification === 'Cost Saving') {
-                const selectedRadio = document.querySelector('input[name="value_cost"]:checked');
-                value = selectedRadio.value;
-                valueText = document.querySelector(`label[for="${selectedRadio.id}"] > span:first-child`).textContent;
-            } else { // Improve Productivity
-                const selectedRadio = document.querySelector('input[name="value_prod"]:checked');
-                value = selectedRadio.value;
-                valueText = document.querySelector(`label[for="${selectedRadio.id}"] > span:first-child`).textContent;
+            const selections = getSelections();
+
+            const isComplete = !!selections;
+            addToListBtn.disabled = !isComplete;
+
+            if (!isComplete) {
+                resultContent.classList.add('hidden');
+                incompleteMessage.classList.remove('hidden');
+                analysisSection.classList.add('hidden');
+                scoreBreakdownContent.classList.add('hidden');
+                return;
             }
 
-            const ease = document.querySelector('input[name="ease"]:checked').value;
-            const commitment = document.querySelector('input[name="commitment"]:checked').value;
+            resultContent.classList.remove('hidden');
+            incompleteMessage.classList.add('hidden');
+            analysisSection.classList.remove('hidden');
+            scoreBreakdownContent.classList.remove('hidden');
+
+            const { name, classification, value, ease, commitment } = selections;
 
             // 2. Calculate scores
             const classScore = SCORES.classification[classification];
@@ -339,7 +614,7 @@
             const finalScore = (classScore + valueScore + easeScore) * commitScore;
 
             // 3. Update display
-            resultProjectName.textContent = projectName;
+            resultProjectName.textContent = name;
             finalScoreDisplay.textContent = finalScore;
             
             classScoreDisplay.textContent = classScore;
@@ -350,11 +625,12 @@
             calculationDisplay.innerHTML = `(<span class="text-yellow-300">${classScore}</span> + <span class="text-yellow-300">${valueScore}</span> + <span class="text-yellow-300">${easeScore}</span>) &times; <span class="text-red-300">${commitScore}</span> = ${finalScore}`;
 
             // 4. Build and display summary sentence
+            const valueText = document.querySelector(`label[for="${document.querySelector(`input[name="value_${classification.toLowerCase().split(' ')[0]}"]:checked`).id}"] > span:first-child`).textContent;
             const easeTextMap = { 'Easy': 'easy to execute', 'Moderate': 'moderately difficult to execute', 'Hard': 'hard to execute' };
             const commitmentTextMap = { 'Yes': 'with strong support from the MT', 'No': 'with no support from the MT' };
             const classificationText = classification === 'Improve Productivity' ? 'improving Productivity' : `supporting ${classification}`;
             
-            const summary = `A "${projectName}" project ${classificationText}, providing a potential value of ${valueText}, that is ${easeTextMap[ease]} and ${commitmentTextMap[commitment]}.`;
+            const summary = `A "${name}" project ${classificationText}, providing a potential value of ${valueText}, that is ${easeTextMap[ease]} and ${commitmentTextMap[commitment]}.`;
             summarySentenceDisplay.textContent = summary;
 
             // 5. Update explanation text
@@ -384,13 +660,12 @@
             // 7. Update Quadrant Chart
             const totalValue = classScore + valueScore; // Max 6
             const feasibility = easeScore; // Max 3
-            // Map scores to 0-100 coordinates. Add small offset to avoid edges.
-            const x = (feasibility - 1) * (90 / 2) + 10; // Map 1-3 to 10-100
-            const y = 100 - ((totalValue - 2) * (90 / 4) + 10); // Map 2-6 to 10-100, inverted Y
+            const x = (feasibility - 1) * (90 / 2) + 10;
+            const y = 100 - ((totalValue - 2) * (90 / 4) + 10);
             quadrantDot.setAttribute('cx', x);
             quadrantDot.setAttribute('cy', y);
             
-            // 8. Update Quadrant Title and Description with NEW, SIMPLER TERMS
+            // 8. Update Quadrant Title and Description
             let quadrantName, quadrantDescText, quadrantColor;
             if (x >= 50 && y < 50) {
                 quadrantName = "Do Now";
@@ -411,12 +686,10 @@
             }
             quadrantTitle.innerHTML = `Current Quadrant: <span class="font-bold ${quadrantColor}">${quadrantName}</span>`;
             quadrantDescription.textContent = quadrantDescText;
-
-
+            
             // 9. Update What-If Scenarios
             whatIfContainer.innerHTML = ''; // Clear old suggestions
             let suggestions = [];
-
             if (commitScore === 0) {
                 const potentialScore = (classScore + valueScore + easeScore) * 1;
                 suggestions.push({text: `If you gain MT Commitment, your score would jump from 0 to <strong>${potentialScore}</strong>.`, icon: '🤝'});
@@ -432,12 +705,8 @@
                     suggestions.push({text: `Increasing the project's Value to 'High' would raise your score by <strong>+${gain}</strong>.`, icon: '💰'});
                 }
             }
-
             if (suggestions.length === 0 && commitScore > 0) {
-                whatIfContainer.innerHTML = `<div class="flex items-center gap-3 p-3 bg-green-100 text-green-800 rounded-lg text-sm">
-                    <span class="text-xl">🎉</span>
-                    <span>This project is already well-optimized according to the framework!</span>
-                </div>`;
+                whatIfContainer.innerHTML = `<div class="flex items-center gap-3 p-3 bg-green-100 text-green-800 rounded-lg text-sm"><span class="text-xl">🎉</span><span>This project is already well-optimized according to the framework!</span></div>`;
             } else {
                 suggestions.forEach(s => {
                     const div = document.createElement('div');
@@ -446,53 +715,282 @@
                     whatIfContainer.appendChild(div);
                 });
             }
-        }
-
-        // --- EVENT LISTENERS ---
-
-        // Centralized handler for all radio button changes
-        function handleRadioChange(event) {
-            // If the changed input is a classification radio, handle visibility
-            if (event.target.name === 'classification') {
-                const selectedValue = event.target.value;
-                let targetGroupId;
-                if (selectedValue === 'Growth') {
-                    targetGroupId = 'value_growth';
-                } else if (selectedValue === 'Cost Saving') {
-                    targetGroupId = 'value_cost';
-                } else { // Improve Productivity
-                    targetGroupId = 'value_prod';
-                }
-
-                valueGroups.forEach(group => {
-                    if (group.id === targetGroupId) {
-                        group.classList.remove('hidden');
-                    } else {
-                        group.classList.add('hidden');
-                    }
-                });
-            }
             
-            // Run the calculation after any change
+            // 10. Update Likelihood Ring
+            const percent = Math.round(scorePercentage);
+            likelihoodPercent.textContent = `${percent}%`;
+            const radius = 15.9155;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - percent / 100 * circumference;
+            likelihoodRing.style.strokeDasharray = `${circumference} ${circumference}`;
+            likelihoodRing.style.strokeDashoffset = offset;
+        }
+        
+        // --- EVENT LISTENERS ---
+        function handleInputChange() {
             calculateAndDisplay();
         }
-
-        // Attach listeners
-        projectNameInput.addEventListener('input', calculateAndDisplay); // For live typing
+        projectNameInput.addEventListener('input', handleInputChange);
+        projectDescriptionInput.addEventListener('input', handleInputChange);
         document.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', handleRadioChange);
+            radio.addEventListener('change', (event) => {
+                if (event.target.name === 'classification') {
+                    const selectedValue = event.target.value;
+                    let targetGroupId;
+                    if (selectedValue === 'Growth') targetGroupId = 'value_growth';
+                    else if (selectedValue === 'Cost Saving') targetGroupId = 'value_cost';
+                    else targetGroupId = 'value_prod';
+                    valueGroups.forEach(group => {
+                        group.classList.toggle('hidden', group.id !== targetGroupId);
+                    });
+                }
+                calculateAndDisplay();
+            });
+        });
+        flipButton.addEventListener('click', () => resultCard.classList.add('flipped'));
+        flipBackButton.addEventListener('click', () => resultCard.classList.remove('flipped'));
+
+        // --- MODAL LOGIC ---
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+        classificationInfoBtn.addEventListener('click', () => openModal(classificationModal));
+        valueInfoBtn.addEventListener('click', () => openModal(valueModal));
+        commitmentInfoBtn.addEventListener('click', () => openModal(commitmentModal));
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => closeModal(e.target.closest('.info-modal')));
+        });
+        document.querySelectorAll('.info-modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal(modal);
+            });
+            modal.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    modal.querySelectorAll('.modal-content').forEach(content => {
+                        content.classList.toggle('hidden', content.dataset.tabContent !== tabName);
+                    });
+                });
+            });
+        });
+        
+        // --- COMPARISON LOGIC ---
+        function addCurrentProjectToList() {
+            const selections = getSelections();
+            if (!selections) return;
+            const { name, description, classification, value, ease, commitment } = selections;
+            const classScore = SCORES.classification[classification];
+            const valueScore = SCORES.value[value];
+            const easeScore = SCORES.ease[ease];
+            const commitScore = SCORES.commitment[commitment];
+            const finalScore = (classScore + valueScore + easeScore) * commitScore;
+            
+            const quadrantX = (easeScore - 1) * (90 / 2) + 10;
+            const quadrantY = 100 - ((classScore + valueScore - 2) * (90 / 4) + 10);
+            let quadrantName;
+            if (quadrantX >= 50 && quadrantY < 50) quadrantName = "Do Now";
+            else if (quadrantX < 50 && quadrantY < 50) quadrantName = "Plan For Later";
+            else if (quadrantX >= 50 && quadrantY >= 50) quadrantName = "Re-evaluate";
+            else quadrantName = "Don't Do";
+
+            projectList.push({ id: Date.now(), name, description, finalScore, quadrantName, selections });
+            saveAndRenderTable();
+        }
+        addToListBtn.addEventListener('click', addCurrentProjectToList);
+
+        function saveAndRenderTable() {
+            localStorage.setItem('projectList', JSON.stringify(projectList));
+            renderComparisonTable();
+        }
+
+        function renderComparisonTable() {
+            comparisonSection.classList.toggle('hidden', projectList.length === 0);
+            comparisonTableBody.innerHTML = '';
+            projectList.sort((a, b) => b.finalScore - a.finalScore).forEach((project, index) => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                const likelihood = Math.round((project.finalScore / 9) * 100);
+
+                row.innerHTML = `
+                    <td class="text-center py-2 px-2 font-semibold text-gray-500">${index + 1}</td>
+                    <td class="py-2 px-4">${project.name}</td>
+                    <td class="text-center py-2 px-4 font-bold">${project.finalScore}</td>
+                    <td class="text-center py-2 px-4">${likelihood}%</td>
+                    <td class="text-center py-2 px-4">${project.quadrantName}</td>
+                    <td class="text-center py-2 px-4">
+                        <button class="text-blue-500 hover:text-blue-700 text-sm font-semibold" data-id="${project.id}" data-action="edit">Edit</button>
+                        <button class="text-gray-500 hover:text-gray-700 text-sm font-semibold ml-2" data-id="${project.id}" data-action="details">Details</button>
+                        <button class="text-red-500 hover:text-red-700 text-sm font-semibold ml-2" data-id="${project.id}" data-action="remove">Remove</button>
+                    </td>
+                `;
+                const descRow = document.createElement('tr');
+                descRow.className = 'hidden';
+                descRow.innerHTML = `<td colspan="6" class="p-4 bg-gray-50 text-gray-700">${project.description || 'No description provided.'}</td>`;
+                
+                comparisonTableBody.appendChild(row);
+                comparisonTableBody.appendChild(descRow);
+            });
+        }
+        
+        comparisonTableBody.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const id = parseInt(e.target.dataset.id);
+                const action = e.target.dataset.action;
+
+                if (action === 'remove') {
+                    projectList = projectList.filter(p => p.id !== id);
+                    saveAndRenderTable();
+                } else if (action === 'details') {
+                    const descRow = e.target.closest('tr').nextElementSibling;
+                    descRow.classList.toggle('hidden');
+                } else if (action === 'edit') {
+                    const projectToEdit = projectList.find(p => p.id === id);
+                    if (projectToEdit) {
+                        // Load data into form
+                        projectNameInput.value = projectToEdit.name;
+                        projectDescriptionInput.value = projectToEdit.description;
+                        document.querySelector(`input[name="classification"][value="${projectToEdit.selections.classification}"]`).checked = true;
+                        
+                        let valueGroupName;
+                        if(projectToEdit.selections.classification === 'Growth') valueGroupName = 'value_growth';
+                        else if(projectToEdit.selections.classification === 'Cost Saving') valueGroupName = 'value_cost';
+                        else valueGroupName = 'value_prod';
+                        document.querySelector(`input[name="${valueGroupName}"][value="${projectToEdit.selections.value}"]`).checked = true;
+                        
+                        document.querySelector(`input[name="ease"][value="${projectToEdit.selections.ease}"]`).checked = true;
+                        document.querySelector(`input[name="commitment"][value="${projectToEdit.selections.commitment}"]`).checked = true;
+                        
+                        // Trigger change to show correct value group and recalculate
+                        document.querySelector('input[name="classification"]:checked').dispatchEvent(new Event('change'));
+
+                        // Remove from list to be re-added
+                        projectList = projectList.filter(p => p.id !== id);
+                        saveAndRenderTable();
+                    }
+                }
+            }
         });
 
-        // Card flip logic
-        flipButton.addEventListener('click', () => {
-            resultCard.classList.add('flipped');
-        });
-        flipBackButton.addEventListener('click', () => {
-            resultCard.classList.remove('flipped');
+        // --- EXPORT LOGIC ---
+        function downloadCSV() {
+            const headers = ["#", "Project Name", "Description", "Classification", "Value", "Ease of Execution", "MT Commitment", "Score", "Likelihood (%)", "Quadrant"];
+            let csvContent = headers.join(",") + "\r\n";
+            
+            projectList.forEach((p, index) => {
+                const likelihood = Math.round((p.finalScore / 9) * 100);
+                const row = [
+                    index + 1,
+                    `"${p.name.replace(/"/g, '""')}"`,
+                    `"${p.description.replace(/"/g, '""')}"`,
+                    p.selections.classification,
+                    p.selections.value,
+                    p.selections.ease,
+                    p.selections.commitment,
+                    p.finalScore,
+                    likelihood,
+                    p.quadrantName
+                ];
+                csvContent += row.join(",") + "\r\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "project_comparison.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportAsPDF() {
+            const element = document.getElementById('capture-area');
+            const button = document.getElementById('pdfBtn');
+            button.textContent = 'Generating...';
+            button.disabled = true;
+
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = canvasWidth / canvasHeight;
+                const imgWidth = pdfWidth;
+                const imgHeight = imgWidth / ratio;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+                }
+                pdf.save('framework_playground.pdf');
+                button.textContent = 'Export as PDF';
+                button.disabled = false;
+            });
+        }
+        csvBtn.addEventListener('click', downloadCSV);
+        pdfBtn.addEventListener('click', exportAsPDF);
+
+        // --- TOUR LOGIC ---
+        startTourBtn.addEventListener('click', () => {
+            introJs().setOptions({
+                steps: [
+                    {
+                        element: '#controls-panel',
+                        intro: 'This is the main control panel. Define your project here by filling out all the fields.',
+                        position: 'right'
+                    },
+                    {
+                        element: '#results-panel',
+                        intro: 'Your results appear here instantly. You can see the final score, a summary sentence, and the calculation breakdown.',
+                        position: 'left'
+                    },
+                     {
+                        element: '#analysisSection',
+                        intro: 'Once you have a score, this section helps you analyze it. See where your project lands on the quadrant, its likelihood of being selected, and get suggestions for improvement.',
+                        position: 'top'
+                    },
+                    {
+                        element: '#comparisonSection',
+                        intro: 'Add multiple projects to the list to compare them. They will be automatically ranked by score. You can edit, view details, or remove them from here.',
+                        position: 'top'
+                    },
+                     {
+                        element: '#exportCenter',
+                        intro: 'When you are ready, you can export your comparison list to use in Excel or get a PDF of the page.',
+                        position: 'top'
+                    }
+                ]
+            }).start();
         });
 
-        // --- INITIAL CALCULATION ---
-        window.addEventListener('load', calculateAndDisplay);
+
+        // --- INITIALIZATION ---
+        window.addEventListener('load', () => {
+            const savedList = localStorage.getItem('projectList');
+            if (savedList) {
+                projectList = JSON.parse(savedList);
+                renderComparisonTable();
+            }
+            calculateAndDisplay();
+        });
 
     </script>
 </body>
